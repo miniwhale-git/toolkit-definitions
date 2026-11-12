@@ -1,0 +1,401 @@
+{
+  "note": "Labels the writer can make (and some from outside), what the app shows for each (LabelText.shown of LabelText.clean) and its kind (LabelText.kindOf). Written by scripts/threat-rules.test.mjs; LabelKindTest reads it.",
+  "cases": [
+    {
+      "label": "mSpy (stalkerware)",
+      "from": "writer: name passes, stalkerware",
+      "shown": "mSpy (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "Wise Mo_2.0-x (stalkerware)",
+      "from": "writer: name passes, stalkerware",
+      "shown": "Wise Mo_2.0-x (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "a1234 (stalkerware)",
+      "from": "writer: name passes, stalkerware",
+      "shown": "a1234 (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "Spy.Ware (stalkerware)",
+      "from": "writer: name passes, stalkerware",
+      "shown": "Spy.Ware (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (stalkerware)",
+      "from": "writer: name passes, stalkerware",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "Stalkerware",
+      "from": "writer: name fails, stalkerware",
+      "shown": "Stalkerware",
+      "kind": "GENERIC_THREAT"
+    },
+    {
+      "label": "Snoopza (name used by stalkerware)",
+      "from": "writer: under a system prefix, stalkerware",
+      "shown": "Snoopza (name used by stalkerware)",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "Name used by stalkerware",
+      "from": "writer: under a system prefix, plain stalkerware",
+      "shown": "Name used by stalkerware",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "mSpy (watchware)",
+      "from": "writer: name passes, watchware",
+      "shown": "mSpy (watchware)",
+      "kind": "WATCHWARE"
+    },
+    {
+      "label": "Wise Mo_2.0-x (watchware)",
+      "from": "writer: name passes, watchware",
+      "shown": "Wise Mo_2.0-x (watchware)",
+      "kind": "WATCHWARE"
+    },
+    {
+      "label": "a1234 (watchware)",
+      "from": "writer: name passes, watchware",
+      "shown": "a1234 (watchware)",
+      "kind": "WATCHWARE"
+    },
+    {
+      "label": "Spy.Ware (watchware)",
+      "from": "writer: name passes, watchware",
+      "shown": "Spy.Ware (watchware)",
+      "kind": "WATCHWARE"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (watchware)",
+      "from": "writer: name passes, watchware",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (watchware)",
+      "kind": "WATCHWARE"
+    },
+    {
+      "label": "Monitoring app",
+      "from": "writer: name fails, watchware",
+      "shown": "Monitoring app",
+      "kind": "GENERIC_MONITORING"
+    },
+    {
+      "label": "Snoopza (name used by watchware)",
+      "from": "writer: under a system prefix, watchware",
+      "shown": "Snoopza (name used by watchware)",
+      "kind": "NAME_USED_BY_WATCHWARE"
+    },
+    {
+      "label": "Name used by a monitoring app",
+      "from": "writer: under a system prefix, plain watchware",
+      "shown": "Name used by a monitoring app",
+      "kind": "GENERIC_MONITORING"
+    },
+    {
+      "label": "mSpy (spyware)",
+      "from": "writer: name passes, spyware",
+      "shown": "mSpy (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Wise Mo_2.0-x (spyware)",
+      "from": "writer: name passes, spyware",
+      "shown": "Wise Mo_2.0-x (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "a1234 (spyware)",
+      "from": "writer: name passes, spyware",
+      "shown": "a1234 (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Spy.Ware (spyware)",
+      "from": "writer: name passes, spyware",
+      "shown": "Spy.Ware (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (spyware)",
+      "from": "writer: name passes, spyware",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Spyware",
+      "from": "writer: name fails, spyware",
+      "shown": "Spyware",
+      "kind": "GENERIC_THREAT"
+    },
+    {
+      "label": "Snoopza (name used by spyware)",
+      "from": "writer: under a system prefix, spyware",
+      "shown": "Snoopza (name used by spyware)",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "Name used by spyware",
+      "from": "writer: under a system prefix, plain spyware",
+      "shown": "Name used by spyware",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "mSpy (forensic tool)",
+      "from": "writer: name passes, forensic tool",
+      "shown": "mSpy (forensic tool)",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "Wise Mo_2.0-x (forensic tool)",
+      "from": "writer: name passes, forensic tool",
+      "shown": "Wise Mo_2.0-x (forensic tool)",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "a1234 (forensic tool)",
+      "from": "writer: name passes, forensic tool",
+      "shown": "a1234 (forensic tool)",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "Spy.Ware (forensic tool)",
+      "from": "writer: name passes, forensic tool",
+      "shown": "Spy.Ware (forensic tool)",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (forensic tool)",
+      "from": "writer: name passes, forensic tool",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (forensic tool)",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "Forensic tool",
+      "from": "writer: name fails, forensic tool",
+      "shown": "Forensic tool",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "mSpy (name used by stalkerware)",
+      "from": "writer: name passes, name used by stalkerware",
+      "shown": "mSpy (name used by stalkerware)",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "Wise Mo_2.0-x (name used by stalkerware)",
+      "from": "writer: name passes, name used by stalkerware",
+      "shown": "Wise Mo_2.0-x (name used by stalkerware)",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "a1234 (name used by stalkerware)",
+      "from": "writer: name passes, name used by stalkerware",
+      "shown": "a1234 (name used by stalkerware)",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "Spy.Ware (name used by stalkerware)",
+      "from": "writer: name passes, name used by stalkerware",
+      "shown": "Spy.Ware (name used by stalkerware)",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (name used by stalkerware)",
+      "from": "writer: name passes, name used by stalkerware",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (name used by stalkerware)",
+      "kind": "NAME_USED_BY_STALKERWARE"
+    },
+    {
+      "label": "mSpy (name used by watchware)",
+      "from": "writer: name passes, name used by watchware",
+      "shown": "mSpy (name used by watchware)",
+      "kind": "NAME_USED_BY_WATCHWARE"
+    },
+    {
+      "label": "Wise Mo_2.0-x (name used by watchware)",
+      "from": "writer: name passes, name used by watchware",
+      "shown": "Wise Mo_2.0-x (name used by watchware)",
+      "kind": "NAME_USED_BY_WATCHWARE"
+    },
+    {
+      "label": "a1234 (name used by watchware)",
+      "from": "writer: name passes, name used by watchware",
+      "shown": "a1234 (name used by watchware)",
+      "kind": "NAME_USED_BY_WATCHWARE"
+    },
+    {
+      "label": "Spy.Ware (name used by watchware)",
+      "from": "writer: name passes, name used by watchware",
+      "shown": "Spy.Ware (name used by watchware)",
+      "kind": "NAME_USED_BY_WATCHWARE"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (name used by watchware)",
+      "from": "writer: name passes, name used by watchware",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (name used by watchware)",
+      "kind": "NAME_USED_BY_WATCHWARE"
+    },
+    {
+      "label": "mSpy (name used by spyware)",
+      "from": "writer: name passes, name used by spyware",
+      "shown": "mSpy (name used by spyware)",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "Wise Mo_2.0-x (name used by spyware)",
+      "from": "writer: name passes, name used by spyware",
+      "shown": "Wise Mo_2.0-x (name used by spyware)",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "a1234 (name used by spyware)",
+      "from": "writer: name passes, name used by spyware",
+      "shown": "a1234 (name used by spyware)",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "Spy.Ware (name used by spyware)",
+      "from": "writer: name passes, name used by spyware",
+      "shown": "Spy.Ware (name used by spyware)",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (name used by spyware)",
+      "from": "writer: name passes, name used by spyware",
+      "shown": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (name used by spyware)",
+      "kind": "NAME_USED_BY_SPYWARE"
+    },
+    {
+      "label": "RCS Lab (spyware)",
+      "from": "writer: MVT campaign",
+      "shown": "RCS Lab (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Operation Triangulation (spyware)",
+      "from": "writer: MVT campaign",
+      "shown": "Operation Triangulation (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "WyrmSpy and DragonEgg (spyware)",
+      "from": "writer: MVT campaign",
+      "shown": "WyrmSpy and DragonEgg (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Mercenary campaign (spyware)",
+      "from": "writer: MVT campaign",
+      "shown": "Mercenary campaign (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Cellebrite (forensic tool)",
+      "from": "writer: MVT campaign",
+      "shown": "Cellebrite (forensic tool)",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "Some Campaign (spyware)",
+      "from": "writer: MVT campaign",
+      "shown": "Some Campaign (spyware)",
+      "kind": "SPYWARE"
+    },
+    {
+      "label": "Toolkit list check",
+      "from": "writer: canary",
+      "shown": "Toolkit list check",
+      "kind": "UNKNOWN"
+    },
+    {
+      "label": "Call +1 555 0100 (stalkerware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Stalkerware",
+      "kind": "GENERIC_THREAT"
+    },
+    {
+      "label": "12345 (watchware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Monitoring app",
+      "kind": "GENERIC_MONITORING"
+    },
+    {
+      "label": "www (spyware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Spyware",
+      "kind": "GENERIC_THREAT"
+    },
+    {
+      "label": "HTTP spy (name used by watchware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Name used by a monitoring app",
+      "kind": "GENERIC_MONITORING"
+    },
+    {
+      "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (forensic tool)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Forensic tool",
+      "kind": "FORENSIC"
+    },
+    {
+      "label": "mSpy (malware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Listed app",
+      "kind": "UNKNOWN"
+    },
+    {
+      "label": "mSpy (stalkerware) ",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "mSpy (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": " mSpy (stalkerware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "mSpy (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "a (stalkerware) (spyware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Spyware",
+      "kind": "GENERIC_THREAT"
+    },
+    {
+      "label": "Spуware (stalkerware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Stalkerware",
+      "kind": "GENERIC_THREAT"
+    },
+    {
+      "label": "mSpy‮ (stalkerware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "mSpy (stalkerware)",
+      "kind": "STALKERWARE"
+    },
+    {
+      "label": "Listed app",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Listed app",
+      "kind": "UNKNOWN"
+    },
+    {
+      "label": "mSpy",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "mSpy",
+      "kind": "UNKNOWN"
+    },
+    {
+      "label": "Monitoring app (stalkerware)",
+      "from": "outside: as a tampered list could hold it",
+      "shown": "Monitoring app (stalkerware)",
+      "kind": "STALKERWARE"
+    }
+  ]
+}

@@ -6,6 +6,10 @@
 # Parent names of every entry are protected too, so a lookup that walks up from one of these hosts
 # can never hit. Add a host here when a user reports a false warning; never remove one to "make a
 # list bigger". The build prints how many upstream entries each rule dropped.
+#
+# Shorteners, QR-code redirects, link-in-bio and tracking redirects are in shorteners.txt; the build
+# adds each one here as a "shared" entry. A shortener listed below without "shared" keeps the
+# stronger rule (nothing below it is listed either).
 
 # ---- Search, mail and cloud: Google, Microsoft, Apple, Amazon --------------------------------
 google.com
@@ -206,7 +210,7 @@ symantec.com
 trendmicro.com
 quickheal.com
 
-# ---- Shortener and tunnel services: the service host is never listed ----------------------------------
+# ---- Shorteners kept whole, and tunnel services (more shorteners in shorteners.txt) ---------------------
 bit.ly
 tinyurl.com
 is.gd
@@ -859,22 +863,16 @@ business.site shared
 jimdo.com
 tilda.ws shared
 tilda.cc
-mailchi.mp shared
 mailchimpsites.com shared
-list-manage.com shared
 campaign-archive.com shared
 mcusercontent.com shared
 eepurl.com shared
 mcsv.net shared
-sendgrid.net shared
 sendgrid.com
-mandrillapp.com shared
-rs6.net shared
 constantcontact.com
 exacttarget.com shared
 hubspotpagebuilder.com shared
 hs-sites.com shared
-hubspotlinks.com shared
 hubspot.com
 force.com shared
 my.site.com shared
@@ -891,9 +889,6 @@ service-now.com
 myworkdayjobs.com shared
 bamboohr.com shared
 monday.com
-app.link shared
-onelink.me shared
-page.link shared
 fandom.com shared
 itch.io shared
 bandcamp.com shared
@@ -919,7 +914,6 @@ kxcdn.com shared
 imgix.net shared
 
 # ---- Document, form and survey hosts ---------------------------------------------------------------
-forms.gle shared
 typeform.com shared
 jotform.com shared
 formstack.com shared
@@ -952,47 +946,10 @@ figma.com
 asana.com
 trello.com
 
-# ---- Link shorteners and redirect services: the service name itself is never listed ---------------
-tiny.cc shared
-t.ly shared
-s.id shared
-shorturl.at shared
-rebrand.ly shared
+# ---- Shortener companies kept whole (the services themselves are in shorteners.txt) ----------------
 rebrandly.com
-bl.ink shared
 short.io
-v.gd shared
-clck.ru shared
 bitly.com
-bit.do shared
-db.tt shared
-wa.me shared
-m.me shared
-ig.me shared
-aka.ms shared
-apple.co shared
-amzn.eu shared
-a.co shared
-spoti.fi shared
-trib.al shared
-dlvr.it shared
-ift.tt shared
-hubs.ly shared
-hubs.la shared
-bbc.in shared
-nyti.ms shared
-wapo.st shared
-cnn.it shared
-reut.rs shared
-econ.st shared
-g.page shared
-goo.gle shared
-pin.it shared
-vk.cc shared
-qrco.de shared
-href.li shared
-urldefense.com shared
-cudasvc.com shared
 
 # ---- Google, Microsoft, Apple and Amazon: more of their own names ----------------------------------
 google.com.pk

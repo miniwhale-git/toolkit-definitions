@@ -53,6 +53,49 @@ export function labelAllowed(label) {
   return safeName(name) === name;
 }
 
+/** What the app shows for a label that names no known kind and breaks the rule (LabelText.UNKNOWN). */
+export const UNKNOWN_LABEL = "Listed app";
+
+/** The label as the app shows it (LabelText.shown): unchanged when allowed, else the plain word for its kind. */
+export function shownLabel(label) {
+  if (labelAllowed(label)) return label;
+  const { kind } = splitLabel(label);
+  return kind === null ? UNKNOWN_LABEL : KINDS[kind];
+}
+
+/**
+ * The kind of a label, by the names of the app's LabelKind (LabelText.kindOf): each KIND word, the plain
+ * words for a name that did not pass, and UNKNOWN. A test feeds every label the writer can make through both.
+ */
+export const LABEL_KIND_OF = Object.freeze({
+  stalkerware: "STALKERWARE",
+  spyware: "SPYWARE",
+  "forensic tool": "FORENSIC",
+  watchware: "WATCHWARE",
+  "name used by stalkerware": "NAME_USED_BY_STALKERWARE",
+  "name used by spyware": "NAME_USED_BY_SPYWARE",
+  "name used by watchware": "NAME_USED_BY_WATCHWARE",
+});
+
+/** The plain words: "Stalkerware" and "Spyware" are a generic threat, the monitoring words a generic monitoring app. */
+export const GENERIC_KIND_OF = Object.freeze({
+  Stalkerware: "GENERIC_THREAT",
+  Spyware: "GENERIC_THREAT",
+  "Monitoring app": "GENERIC_MONITORING",
+  "Name used by a monitoring app": "GENERIC_MONITORING",
+  "Forensic tool": "FORENSIC",
+  "Name used by stalkerware": "NAME_USED_BY_STALKERWARE",
+  "Name used by spyware": "NAME_USED_BY_SPYWARE",
+});
+
+/** The kind of what the app shows for this label. */
+export function labelKind(label) {
+  const shown = shownLabel(label);
+  const { kind } = splitLabel(shown);
+  if (kind !== null) return LABEL_KIND_OF[kind];
+  return GENERIC_KIND_OF[shown] ?? "UNKNOWN";
+}
+
 /**
  * The label for an app whose package name imitates a system one ("com.android.core.mngi"): it names
  * the threat but says the name is used by it, because a phone maker could ship the same name.

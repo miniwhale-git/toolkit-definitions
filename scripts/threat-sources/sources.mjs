@@ -38,8 +38,21 @@ export const SOURCE_ROWS = [
   { id: "certpl", name: "CERT Polska warning list", licence: "Free use (CERT Polska data policy)", url: "https://cert.pl/en/warning-list/", min: 62000 },
 ];
 
-/** Who fills the host table first when it is over budget. The first has the most claim on the space. */
+/**
+ * The host sources, most trusted first. This order fills the host table, and when the table is over its
+ * budget the cut comes from the last source first (then the one before it). Within a source the hosts
+ * kept are the ones with the lowest keys: none of the sources lists its hosts newest first, so the key
+ * (a hash) gives a fair, repeatable sample.
+ */
 export const HOST_PRIORITY = ["mvt", "amnesty", "certpl", "phishing"];
+
+/**
+ * Sources whose short bare domains are dropped (hosts.mjs shortNameRule): the bulk phishing lists, where a
+ * short registered name is almost always a shortener or a generic service someone abused. Not MVT or
+ * Amnesty: researchers list there the attacker's own short look-alike domains ("bity.ws", "tly.link"),
+ * which are the infection links themselves.
+ */
+export const SHORT_NAME_SOURCES = ["certpl", "phishing"];
 
 /** Repositories whose age is reported (a warning only): path of the main file and the age that is too old, in days. */
 export const FRESHNESS = [
@@ -54,3 +67,8 @@ export const MAX_REJECTED_SHARE = 0.05;
 export const MAX_DROP = 0.3;
 /** A gate stops the build when the app entries together grow by more than this against the previous set. */
 export const MAX_GROWTH = 0.25;
+/**
+ * A host source whose entries grow by more than this (1 = more than doubles) in one run is held at its
+ * previous data: only its hosts already in the previous set stay listed, and the run is reported.
+ */
+export const MAX_SOURCE_GROWTH = 1;

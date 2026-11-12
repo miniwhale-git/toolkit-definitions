@@ -5,17 +5,19 @@
  * The file format is described in app/src/main/java/com/attnom/folio/security/defs/DefsFormat.kt.
  *
  *   node scripts/threat-data.mjs build --out DIR [--seq 01|auto] [--previous DIR] [--allow-drop] [--allow-growth]
- *                                      [--require-signature] [--date yyyymmdd]
+ *                                      [--require-signature] [--date yyyymmdd] [--report FILE]
  *   node scripts/threat-data.mjs verify DIR
  *   node scripts/threat-data.mjs fetch-published --out DIR [--base URL]
  *        (exit 3: nothing is published yet; exit 4: what is published is signed by us but in an older format)
  *   node scripts/threat-data.mjs lookup DIR package|cert|sha|host VALUE      (exit 1 when not found)
  *   node scripts/threat-data.mjs sync-site [--check]    (copy this script into definitions-site/)
+ *   node scripts/threat-data.mjs sign-fixture --out DIR (the fixed tiny set, signed with the key from the environment)
  *
  * build fetches the sources over https, writes the lists, manifest.json and, when a signing key is
  * given, manifest.json.sig. The key is an Ed25519 private key in PEM: a file named by
  * TOOLKIT_DEFS_KEY_FILE, or the text in TOOLKIT_DEFS_KEY. It is never printed.
  * Every gate prints what it counted. If one fails, nothing is written and the exit code is 1.
+ * --report writes a short Markdown report (passed or not) for the run summary and the "Daily lists" issue.
  */
 
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -25,10 +27,12 @@ import { parseArgs as nodeParseArgs } from "node:util";
 import { NO_KEEP_APPS, assemble, shortestHosts } from "./threat-sources/assemble.mjs";
 import { collectAll, freshnessWarnings } from "./threat-sources/collect.mjs";
 import { makeFetcher } from "./threat-sources/fetch.mjs";
-import { appKeepGate, checkSet, hostBudgetGate, keepRescan, newCertificateLines, previousGates, readSet, sourceGates } from "./threat-sources/gates.mjs";
+import { fixtureSet } from "./threat-sources/fixture-set.mjs";
+import { appKeepGate, checkSet, hostBudgetGate, hostGrowthGate, keepRescan, newCertificateLines, newCertificates, previousGates, readSet, shortNameGate, sourceGates } from "./threat-sources/gates.mjs";
 import { buildKeeper, hostWalk, loadKeepList, normaliseHost } from "./threat-sources/hosts.mjs";
 import { loadKeepApps } from "./threat-sources/keep-apps.mjs";
 import { FILES, LIMITS, MANIFEST, SIGNATURE, manifestBytes, parseManifest, versionFor } from "./threat-sources/manifest.mjs";
+import { buildReport } from "./threat-sources/report.mjs";
 import { privateKeyFromEnv, publicKeys as productionKeys, signBytes, signedByAny } from "./threat-sources/sign.mjs";
 import { MAX_DROP, MAX_GROWTH, MAX_REJECTED_SHARE, SOURCE_ROWS } from "./threat-sources/sources.mjs";
 import { lookupText, openTable } from "./threat-sources/tkl.mjs";
@@ -52,16 +56,32 @@ export function loadVerifiedSet(dir, publicKey) {
 }
 
 /**
- * Build a set in memory and run every gate. Nothing touches the disk.
- * @returns {Promise<{ set: object, manifest: object, results: object[], ok: boolean, lines: string[], hosts: string[] }>}
+ * What the previous set says about each host source, for the growth hold: its host table, and each source's
+ * entries in its manifest (by the row whose name it carries).
  */
-export async function buildSet({ fetchText, keep, keepApps = NO_KEEP_APPS, now = new Date(), seq = 1, previous = null, privateKey = null, publicKey, allowDrop = false, allowGrowth = false, requireSignature = false, rows = SOURCE_ROWS, maxRejected = MAX_REJECTED_SHARE, hostBudget, log = console.log }) {
+export function previousHostData(previous, rows = SOURCE_ROWS) {
+  if (!previous) return null;
+  const bytes = previous.set.files.get("hosts.tkl");
+  const entries = new Map();
+  for (const s of previous.manifest.sources) {
+    const row = rows.find((r) => r.name === s.name);
+    if (row) entries.set(row.id, s.entries);
+  }
+  return { hosts: bytes ? openTable(bytes, "hosts.tkl") : null, entries };
+}
+
+/**
+ * Build a set in memory and run every gate. Nothing touches the disk.
+ * @returns {Promise<{ set: object, manifest: object, results: object[], ok: boolean, lines: string[], hosts: string[], report: { markdown: string, notify: string[] } }>}
+ */
+export async function buildSet({ fetchText, keep, keepApps = NO_KEEP_APPS, now = new Date(), seq = 1, previous = null, privateKey = null, publicKey, allowDrop = false, allowGrowth = false, requireSignature = false, rows = SOURCE_ROWS, maxRejected = MAX_REJECTED_SHARE, hostBudget, warnings = [], log = console.log }) {
   const parts = await collectAll(fetchText, { log });
   for (const part of parts) for (const note of part.notes) log(`${part.id}: ${note}`);
-  const built = assemble(parts, { keep, keepApps, hostBudget });
+  const built = assemble(parts, { keep, keepApps, hostBudget, previous: previousHostData(previous, rows), allowGrowth });
   built.lines.forEach((l) => log(l));
   newCertificateLines(built.certs, previous?.set ?? null).forEach((l) => log(l));
-  log(`the 50 listed hosts with the fewest labels: ${shortestHosts(built.hosts).join(" ")}`);
+  const shortest = shortestHosts(built.hosts);
+  log(`the 50 listed hosts with the fewest labels: ${shortest.join(" ")}`);
   const sources = rows.map((row) => {
     const s = built.perSource.get(row.id);
     return { name: row.name, licence: row.licence, url: row.url, entries: s ? s.pkg + s.cert + s.sha + s.hosts : 0 };
@@ -76,11 +96,25 @@ export async function buildSet({ fetchText, keep, keepApps = NO_KEEP_APPS, now =
     ...sourceGates(built.perSource, rows, maxRejected),
     ...previousGates(built.files, version, previous?.manifest ?? null, { maxDrop: MAX_DROP, allowDrop, maxGrowth: MAX_GROWTH, allowGrowth, now: now.getTime() }),
     appKeepGate(built.appDrops),
-    hostBudgetGate(built.budget),
+    shortNameGate(built.short),
+    hostGrowthGate(built.held),
+    hostBudgetGate(built.budget, built.hosts.length),
     keepRescan(built.hosts, buildKeeper(keep)),
     ...checkSet(set, { publicKey, keep, requireSignature }),
   ];
-  return { set, manifest, results, ok: results.every((r) => r.ok), lines: built.lines, hosts: built.hosts };
+  const ok = results.every((r) => r.ok);
+  const previousPkg = previous?.set.files.get("apps-pkg.tkl");
+  const report = buildReport({
+    version, ok, results, warnings, shortest,
+    appDrops: built.appDrops,
+    newCerts: newCertificates(built.certs, previous?.set ?? null),
+    autoListed: built.autoListed,
+    previousPkg: previousPkg ? openTable(previousPkg, "apps-pkg.tkl") : null,
+    budget: built.budget,
+    held: built.held,
+    short: built.short,
+  });
+  return { set, manifest, results, ok, lines: built.lines, hosts: built.hosts, report };
 }
 
 /** The --date value as a time today or earlier (UTC), keeping the time of day of `now`. A later day is refused. */
@@ -178,7 +212,7 @@ export function lookupIn(dir, kind, value) {
 // ---- the copy for the public repository ----------------------------------------------------------------
 
 const SITE = path.join(HERE, "..", "definitions-site");
-const SITE_FILES = ["threat-data.mjs", "threat-data.test.mjs"];
+const SITE_FILES = ["threat-data.mjs", "threat-data.test.mjs", "threat-rules.test.mjs"];
 
 /** The files the public repository holds a copy of: [from, to] pairs. */
 export function siteCopies() {
@@ -214,6 +248,7 @@ export function parseCommandLine(argv) {
       "allow-growth": { type: "boolean", default: false },
       "require-signature": { type: "boolean", default: false },
       check: { type: "boolean", default: false },
+      report: { type: "string" },
       base: { type: "string", default: PUBLISHED_BASE },
     },
   });
@@ -241,17 +276,35 @@ async function main(argv) {
       console.log(`WARNING  ${why}; the set will be UNSIGNED and the app will refuse it`);
     }
     const fetchText = makeFetcher({ log: (s) => console.log(s) });
-    const { set, results } = await buildSet({
-      fetchText, keep, keepApps: loadKeepApps(), now, seq, previous, privateKey, publicKey,
-      allowDrop: flags["allow-drop"], allowGrowth: flags["allow-growth"], requireSignature: Boolean(privateKey) || flags["require-signature"],
-    });
-    for (const warning of await freshnessWarnings(fetchText, now)) {
+    const warnings = await freshnessWarnings(fetchText, now);
+    for (const warning of warnings) {
       console.log(`WARNING  ${warning}`);
       if (process.env.GITHUB_ACTIONS) console.log(`::warning::${warning}`);
     }
-    if (!report(results)) throw new GateFailure("a gate failed; nothing was written");
+    const built = await buildSet({
+      fetchText, keep, keepApps: loadKeepApps(), now, seq, previous, privateKey, publicKey, warnings,
+      allowDrop: flags["allow-drop"], allowGrowth: flags["allow-growth"], requireSignature: Boolean(privateKey) || flags["require-signature"],
+    });
+    if (flags.report) {
+      writeFileSync(flags.report, built.report.markdown);
+      console.log(`report written to ${flags.report}${built.report.notify.length ? `; needs a look: ${built.report.notify.join("; ")}` : ""}`);
+    }
+    if (!report(built.results)) throw new GateFailure("a gate failed; nothing was written");
+    writeSet(flags.out, built.set, { publicKey, keep });
+    console.log(`wrote ${built.set.files.size} lists, ${MANIFEST}${built.set.signature ? ` and ${SIGNATURE}` : ""} to ${flags.out}`);
+    return 0;
+  }
+
+  if (command === "sign-fixture") {
+    if (!flags.out) throw new Error("sign-fixture needs --out DIR");
+    const privateKey = privateKeyFromEnv();
+    if (!privateKey) throw new Error("no signing key: set TOOLKIT_DEFS_KEY_FILE or TOOLKIT_DEFS_KEY");
+    const fixture = fixtureSet();
+    const set = { ...fixture, signature: signBytes(fixture.manifestBytes, privateKey) };
+    const index = signedByAny(set.manifestBytes, set.signature, publicKey);
+    if (index < 0) throw new Error("the key in the environment is not one of the production keys (DefsFormat.PUBLIC_KEYS); nothing was written");
     writeSet(flags.out, set, { publicKey, keep });
-    console.log(`wrote ${set.files.size} lists, ${MANIFEST}${set.signature ? ` and ${SIGNATURE}` : ""} to ${flags.out}`);
+    console.log(`wrote the fixture set to ${flags.out}, signed by public key ${index + 1} of ${publicKey.length}`);
     return 0;
   }
 
@@ -297,7 +350,7 @@ async function main(argv) {
     return 0;
   }
 
-  throw new Error("usage: threat-data.mjs build --out DIR | verify DIR | fetch-published --out DIR | lookup DIR package|cert|sha|host VALUE | sync-site [--check]");
+  throw new Error("usage: threat-data.mjs build --out DIR | verify DIR | fetch-published --out DIR | lookup DIR package|cert|sha|host VALUE | sync-site [--check] | sign-fixture --out DIR");
 }
 
 // Run only when started as a script, so the test file can import the functions.

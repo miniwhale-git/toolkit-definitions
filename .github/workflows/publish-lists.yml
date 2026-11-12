@@ -1,13 +1,17 @@
 # Builds the threat lists every day and publishes them with GitHub Pages at /v1/.
 #
 # A gate failure (a source empty or changed shape, a big drop or sudden growth against the set now online,
-# too many keep-list hits, a host table over its budget, a bad signature) fails the build job. Then nothing
-# is deployed, the last good set stays online, and the "report" job opens or updates the issue
-# "Daily lists failed" with the failing gate's output.
+# too many keep-list hits, a bad signature) fails the build job. Then nothing is deployed and the last good
+# set stays online. Ordinary changes do not stop it: a host table over its budget is cut from the least
+# trusted source, and a host source that more than doubles is held at its previous data. Every build writes a
+# short report to the run summary; the "report" job opens or updates the issue "Daily lists" with it when the
+# build failed or when something needs a look (a new keep-list hit, a new certificate entry, a new name
+# listed under a system prefix, a trim or a hold).
 #
 # Needs: Settings > Pages > Source "GitHub Actions"; an environment named "publish" that only the main branch
 # may use, holding the secret TOOLKIT_DEFS_KEY (the Ed25519 private key, PEM text). Only the build job runs
-# in that environment, so a workflow pushed to any other branch cannot read the key.
+# in that environment, so a workflow pushed to any other branch cannot read the key. The first job fails the
+# run when the key is (also) a repository secret, which every job could read.
 
 name: publish
 
@@ -21,7 +25,7 @@ on:
         type: boolean
         default: false
       allow_growth:
-        description: "Accept app entries more than 25% above the set online (a source really grew)"
+        description: "Accept app entries more than 25% above the set online, and a host source that more than doubled (it really grew)"
         type: boolean
         default: false
 
@@ -38,7 +42,25 @@ defaults:
     shell: bash
 
 jobs:
+  # No environment here: a secret this job can see is a repository (or organisation) secret, not the
+  # publish environment's. The key must live only in the environment.
+  key-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    env:
+      KEY_OUTSIDE_ENVIRONMENT: ${{ secrets.TOOLKIT_DEFS_KEY != '' }}
+    steps:
+      - name: The signing key is only in the publish environment
+        run: |
+          if [ "$KEY_OUTSIDE_ENVIRONMENT" = "true" ]; then
+            echo "::error::TOOLKIT_DEFS_KEY is a repository or organisation secret, so any job on any branch can read it. Delete it there and keep it only in the 'publish' environment."
+            exit 1
+          fi
+          echo "TOOLKIT_DEFS_KEY is not visible outside the publish environment."
+
   build:
+    needs: key-guard
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: publish
@@ -46,6 +68,8 @@ jobs:
       contents: read
     outputs:
       failure: ${{ steps.why.outputs.text }}
+      report: ${{ steps.report.outputs.text }}
+      notify: ${{ steps.report.outputs.notify }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,7 +80,7 @@ jobs:
           node-version: "24"
 
       - name: Tests
-        run: node --test scripts/threat-data.test.mjs 2>&1 | tee -a run.log
+        run: node --test scripts/*.test.mjs 2>&1 | tee -a run.log
 
       - name: Download the set that is online now
         id: previous
@@ -86,7 +110,7 @@ jobs:
           ALLOW_DROP: ${{ inputs.allow_drop && '--allow-drop' || '' }}
           ALLOW_GROWTH: ${{ inputs.allow_growth && '--allow-growth' || '' }}
         # The secret is only in this step's environment. The script never prints it.
-        run: node scripts/threat-data.mjs build --out site/v1 --seq auto --require-signature $PREVIOUS_ARGS $ALLOW_DROP $ALLOW_GROWTH 2>&1 | tee -a run.log
+        run: node scripts/threat-data.mjs build --out site/v1 --seq auto --require-signature --report report.md $PREVIOUS_ARGS $ALLOW_DROP $ALLOW_GROWTH 2>&1 | tee -a run.log
 
       - name: Verify what was built
         run: node scripts/threat-data.mjs verify site/v1 2>&1 | tee -a run.log
@@ -101,21 +125,47 @@ jobs:
         with:
           path: site
 
+      # The build's report, passed or not, to the run summary and to the report job. Backticks and "@" are
+      # removed from everything that came from the build, so source text cannot format the page or mention anyone.
+      - name: Report
+        id: report
+        if: always()
+        run: |
+          delimiter="REPORT_$(openssl rand -hex 16)"
+          if [ -f report.md ]; then
+            tr -d '`@' < report.md > report.clean.md
+          else
+            {
+              echo "## Daily lists: the build stopped before it wrote a report"
+              echo
+              echo "Last lines of the run:"
+              echo
+              tail -n 40 run.log 2>/dev/null | cut -c1-500 | tr -d '`@' | sed 's/^/    /' || echo "    (no output was kept)"
+            } > report.clean.md
+          fi
+          cat report.clean.md >> "$GITHUB_STEP_SUMMARY"
+          if head -n 1 report.clean.md | grep -q '^<!-- notify: yes -->'; then echo "notify=yes" >> "$GITHUB_OUTPUT"; else echo "notify=no" >> "$GITHUB_OUTPUT"; fi
+          {
+            echo "text<<$delimiter"
+            head -c 60000 report.clean.md
+            echo
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
       # On failure: the failing gates and the last lines, for the issue. Never the key: the script does not print it.
       - name: Keep what failed
         id: why
         if: failure()
         run: |
+          delimiter="FAILED_$(openssl rand -hex 16)"
           {
-            echo "text<<END_OF_REPORT"
-            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-            echo
+            echo "text<<$delimiter"
             echo "Failing gates:"
-            grep -E '^FAIL ' run.log | cut -c1-1500 | head -20 || true
+            grep -E '^FAIL ' run.log | cut -c1-1500 | head -20 | tr -d '`@' || true
             echo
             echo "Last lines:"
-            tail -n 40 run.log 2>/dev/null | cut -c1-500 || echo "(no output was kept)"
-            echo "END_OF_REPORT"
+            tail -n 40 run.log 2>/dev/null | cut -c1-500 | tr -d '`@' || echo "(no output was kept)"
+            echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
 
   deploy:
@@ -131,26 +181,53 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
-  # A failed build opens one issue, or adds to it while it is open, so weeks of failing gates are seen.
+  # One issue, "Daily lists": its body is the latest report, and each run that needs a look adds a short comment,
+  # so the owner is told. Runs when the build failed, when the key guard failed, or when the report asks for a look.
   report:
-    needs: build
-    if: failure()
+    needs: [key-guard, build]
+    if: ${{ always() && (needs.build.result == 'failure' || needs.build.outputs.notify == 'yes' || needs.key-guard.result == 'failure') }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
-      - name: Open or update "Daily lists failed"
+      - name: Open or update "Daily lists"
         env:
           GH_TOKEN: ${{ github.token }}
-          REPORT: ${{ needs.build.outputs.failure }}
+          REPORT: ${{ needs.build.outputs.report }}
+          FAILURE: ${{ needs.build.outputs.failure }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          GUARD_RESULT: ${{ needs.key-guard.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          title="Daily lists failed"
-          body=$(printf '%s\n\n```\n%s\n```\n' "The daily build failed on $(date -u +%Y-%m-%d). Nothing was published; the last good set stays online." "${REPORT:-The build failed before any gate ran; see the run log.}")
+          title="Daily lists"
+          today=$(date -u +%Y-%m-%d)
+          {
+            if [ "$GUARD_RESULT" = "failure" ]; then
+              echo "The run on $today stopped: TOOLKIT_DEFS_KEY is a repository or organisation secret. Delete it there and keep it only in the publish environment. Nothing was built."
+            elif [ "$BUILD_RESULT" = "failure" ]; then
+              echo "The daily build failed on $today. Nothing was published; the last good set stays online."
+            else
+              echo "The daily build on $today published the lists, and something in it needs a look."
+            fi
+            echo
+            echo "Run: $RUN_URL"
+            echo
+            printf '%s\n' "$REPORT" | tr -d '`@'
+            if [ -n "$FAILURE" ]; then
+              echo
+              echo '```'
+              printf '%s\n' "$FAILURE" | tr -d '`@'
+              echo '```'
+            fi
+          } > body.md
+          head -c 65000 body.md > body.cut.md
+          reasons=$(printf '%s\n' "$REPORT" | tr -d '`@' | grep -m1 '^Needs a look:' | cut -c1-500 || true)
           number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)
           if [ -n "$number" ]; then
-            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+            gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body-file body.cut.md
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$today: build ${BUILD_RESULT:-not run}. ${reasons:-See the report above.} $RUN_URL"
           else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file body.cut.md
           fi
 
   # GitHub switches scheduled workflows off after 60 days without a commit. This keeps the schedule alive

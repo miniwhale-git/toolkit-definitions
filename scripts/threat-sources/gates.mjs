@@ -152,7 +152,13 @@ export function previousGates(files, version, previousManifest, { maxDrop, allow
   const after = apps(files);
   const grew = before > 0 && after > before * (1 + maxGrowth);
   const growth = before > 0 ? `${(((after - before) / before) * 100).toFixed(1)}%` : "n/a";
-  out.push(result("growth", !grew || allowGrowth, `app entries ${before} -> ${after} (${growth})${grew ? (allowGrowth ? " (allowed by --allow-growth)" : `; more than ${maxGrowth * 100}% up`) : `, at most ${maxGrowth * 100}% up`}`));
+  out.push(
+    result(
+      "growth",
+      !grew || allowGrowth,
+      `app entries ${before} -> ${after} (${growth})${grew ? (allowGrowth ? " (allowed by --allow-growth)" : `; more than ${maxGrowth * 100}% up. If a source really grew, run the workflow with allow_growth (--allow-growth)`) : `, at most ${maxGrowth * 100}% up`}`,
+    ),
+  );
   const drops = [];
   const check = (label, now, before) => {
     if (before > 0 && now < before * (1 - maxDrop)) drops.push(`${label} ${before} -> ${now} (${(((before - now) / before) * 100).toFixed(1)}% less)`);
@@ -161,7 +167,15 @@ export function previousGates(files, version, previousManifest, { maxDrop, allow
   for (const f of files) check(f.name, f.entries, previousManifest.files.find((p) => p.name === f.name)?.entries ?? 0);
   for (const p of previousManifest.files) if (p.entries > 0 && !files.some((f) => f.name === p.name)) drops.push(`${p.name} ${p.entries} -> gone`);
   const ok = drops.length === 0 || allowDrop;
-  out.push(result("drop", ok, drops.length ? `${drops.join("; ")}${allowDrop ? " (allowed by --allow-drop)" : `; more than ${maxDrop * 100}% down`}` : `total ${sum(previousManifest.files)} -> ${sum(files)}, no file down by more than ${maxDrop * 100}%`));
+  out.push(
+    result(
+      "drop",
+      ok,
+      drops.length
+        ? `${drops.join("; ")}${allowDrop ? " (allowed by --allow-drop)" : `; more than ${maxDrop * 100}% down. If a source really shrank, run the workflow with allow_drop (--allow-drop)`}`
+        : `total ${sum(previousManifest.files)} -> ${sum(files)}, no file down by more than ${maxDrop * 100}%`,
+    ),
+  );
   return out;
 }
 
@@ -195,24 +209,57 @@ export function appKeepGate(appDrops, maxNew = MAX_NEW_HITS) {
   );
 }
 
-/** Nothing is cut to fit: a host table over its budget stops the build, with the counts. */
-export function hostBudgetGate(budget) {
-  const over = [...budget.over].map(([id, n]) => `${id} ${n}`).join(", ");
-  return result("host budget", budget.wanted <= budget.cap, budget.wanted <= budget.cap ? `${budget.wanted} hosts of ${budget.cap}` : `${budget.wanted} hosts for ${budget.cap} places; over by ${budget.wanted - budget.cap} (${over}). Raise the budget in manifest.mjs and DefsFormat, or drop a source`);
+/**
+ * The host table never stops the build: over its budget, the least trusted source is cut (its hosts with the
+ * lowest keys kept) and the cut is named here, in the report and in the issue. It fails only if the table
+ * still does not fit, which would be a bug.
+ */
+export function hostBudgetGate(budget, listed = budget.wanted) {
+  const fits = listed <= budget.cap;
+  const cut = budget.trims.map((t) => `${t.cut} of ${t.wanted} new hosts from ${t.id}`).join(", ");
+  return result("host budget", fits, budget.trims.length ? `TRIMMED: ${budget.wanted} hosts for ${budget.cap} places; cut ${cut} (lowest keys kept). Raise the budget in manifest.mjs and DefsFormat, or drop a source` : `${listed} hosts of ${budget.cap}`);
 }
 
 /**
- * Certificate entries that the previous set did not have, each as a line for the build log: a new
- * certificate decides about every app signed with it, so a person should be able to see each one.
+ * A host source that more than doubled since the previous set is held at its previous data: only its hosts the
+ * previous set already listed stay. Never a failure (the rest is still published); always reported.
+ */
+export function hostGrowthGate(held) {
+  if (held.length === 0) return result("host growth", true, "no host source more than doubled since the previous set");
+  const named = held.map((h) => `${h.id} ${h.before} -> ${h.now} entries${h.allowed ? " (allowed by --allow-growth)" : `: HELD at its previous data, ${h.kept} hosts kept`}`);
+  const anyHeld = held.some((h) => !h.allowed);
+  return result("host growth", true, `${named.join("; ")}${anyHeld ? ". If the source really grew, run the workflow with allow_growth (--allow-growth)" : ""}`);
+}
+
+/** What the short-name rule dropped, by rule and source, with examples. Never a failure. */
+export function shortNameGate(short) {
+  if (short.length === 0) return result("short names", true, "no short bare domain dropped");
+  const by = new Map();
+  for (const s of short) by.set(`${s.rule} ${s.id}`, (by.get(`${s.rule} ${s.id}`) ?? 0) + 1);
+  const examples = short.slice(0, 10).map((s) => s.host).join(", ");
+  return result("short names", true, `${short.length} short bare domains dropped (${[...by].map(([k, n]) => `${k} ${n}`).join(", ")}), e.g. ${examples}`);
+}
+
+/**
+ * Certificate entries that the previous set did not have: a new certificate decides about every app signed with
+ * it, so a person should see each one. Null when there is no previous set to compare with.
  * @param {Array<{ text: string, label: string }>} entries the certificate items that went into the new table
  * @param {{ files: Map<string, Buffer> } | null} previousSet
+ * @returns {Map<string, string> | null} hex to label
  */
-export function newCertificateLines(entries, previousSet) {
-  if (!previousSet) return [`certificates: no previous set, ${new Set(entries.map((e) => e.text)).size} entries not compared`];
-  const bytes = previousSet.files.get("apps-cert.tkl");
-  if (!bytes) return ["certificates: the previous set has no apps-cert.tkl"];
+export function newCertificates(entries, previousSet) {
+  const bytes = previousSet?.files.get("apps-cert.tkl");
+  if (!bytes) return null;
   const table = openTable(bytes, "apps-cert.tkl");
   const fresh = new Map();
   for (const e of entries) if (!fresh.has(e.text) && lookupText(table, e.text) === null) fresh.set(e.text, e.label);
+  return fresh;
+}
+
+/** newCertificates as lines for the build log. */
+export function newCertificateLines(entries, previousSet) {
+  if (!previousSet) return [`certificates: no previous set, ${new Set(entries.map((e) => e.text)).size} entries not compared`];
+  const fresh = newCertificates(entries, previousSet);
+  if (fresh === null) return ["certificates: the previous set has no apps-cert.tkl"];
   return [`certificates: ${fresh.size} new against the previous set`, ...[...fresh].map(([hex, label]) => `new certificate entry: ${hex} ${label}`)];
 }

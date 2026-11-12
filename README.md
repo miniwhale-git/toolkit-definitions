@@ -52,14 +52,16 @@ Left out on purpose:
 
 ## What protects against bad data
 
-Every build runs checks and publishes nothing if one fails, so the last good set stays online:
+Every build runs checks and publishes nothing if one fails, so the last good set stays online. Ordinary changes in a source do not stop it; they are reported instead (below):
 
 - each source must give at least about half of what it gave when the checks were set, and may not have more than 5% unusable lines;
-- the set may not be more than 30% smaller than the one online, its app entries may not grow by more than 25%, and its version must be higher; every certificate entry the online set did not have is printed in the build log;
-- a **host keep-list** (`scripts/threat-sources/keep-hosts.txt`, over 2,000 hosts) of major global and Indian sites, banks, government and payment domains is removed from the host list, together with everything below them, so a poisoned or careless upstream list cannot make the app warn on `google.com` or `sbi.co.in`. Shared hosting and user content (`blogspot.com`, `github.io`, `web.app`, `pages.dev`, paste sites, cloud storage such as `firebasestorage.googleapis.com`, form hosts, link shorteners) is marked `shared`: the name itself is never listed, a deeper name can be;
-- **app keep-lists**: `keep-packages.txt` (over 400 of the most installed apps, and everything under `android.`, `com.android.` and `com.google.android.` except stalkerware names that imitate them, which stay listed as "name used by stalkerware") and `keep-certs.txt` (the public AOSP test certificates, computed from the files in the Android source tree). An entry that hits them is dropped and printed; more than 3 new hits in one run stop the build, since that looks like a tampered source;
+- the set may not be more than 30% smaller than the one online, its app entries may not grow by more than 25%, and its version must be higher; every certificate entry the online set did not have is printed in the build log and the report;
+- a host source that more than doubles in one run is **held** at its previous data (only its hosts the online set already lists stay) and reported; the rest is published;
+- a **host keep-list** (`scripts/threat-sources/keep-hosts.txt`, over 2,000 hosts) of major global and Indian sites, banks, government and payment domains is removed from the host list, together with everything below them, so a poisoned or careless upstream list cannot make the app warn on `google.com` or `sbi.co.in`. Shared hosting and user content (`blogspot.com`, `github.io`, `web.app`, `pages.dev`, paste sites, cloud storage such as `firebasestorage.googleapis.com`, form hosts) is marked `shared`: the name itself is never listed, a deeper name can be. **Shorteners** (`scripts/threat-sources/shorteners.txt`, about 290 link shorteners, QR-code redirects, link-in-bio pages and tracking redirects) are added to it as `shared` entries;
+- **short bare domains**: from the two bulk phishing lists, a registered name of 4 characters or fewer before its suffix (`gg.gg`, `x.co`, `qr1.be`), or of 6 or fewer that only one source lists (`bitly.ws`), is dropped and counted. Such names are almost always shorteners or generic services, and a bad page on one is a path, which a host list cannot express. Deeper names on them stay listed. The spyware sources (MVT, Amnesty) keep theirs: there a short name is the attacker's own look-alike domain;
+- **app keep-lists**: `keep-packages.txt` (over 700 exact names: the most installed apps and the real system apps under `android.`, `com.android.` and `com.google.android.`) and `keep-certs.txt` (the public AOSP test certificates, computed from the files in the Android source tree). An entry that hits them is dropped and printed; more than 3 new hits in one run stop the build, since that looks like a tampered source. Any other name under those system prefixes is a stalkerware name that imitates a system one: it is listed as "name used by stalkerware" (the app tells the real app by its signer), printed, and never counts toward that limit;
 - labels are built from the source's app name through a strict filter (letters, digits, space, dot, hyphen, underscore; at most 30 characters; no long number, no web address); anything else becomes "Stalkerware", "Monitoring app" or "Spyware";
-- tables must be sorted with no repeated key, keys are 8 bytes everywhere, sizes must stay within the app's limits (host table 6 MB; the build stops rather than cut it), every table must answer its canary entry (the app refuses a set that does not), and the manifest, hashes and signature must verify under the same rules the app reads them by. A `--date` in the future is refused.
+- tables must be sorted with no repeated key, keys are 8 bytes everywhere, sizes must stay within the app's limits (host table 6 MB: over it, the least trusted host source is cut, keeping its hosts with the lowest keys, and the cut is reported; the app tables are never cut), every table must answer its canary entry (the app refuses a set that does not), and the manifest, hashes and signature must verify under the same rules the app reads them by. A `--date` in the future is refused.
 
 If the app warns about a site that is fine, write to support@attnom.com with the host name. It goes on the keep-list.
 
@@ -67,14 +69,15 @@ If the app warns about a site that is fine, write to support@attnom.com with the
 
 `.github/workflows/publish-lists.yml` runs every day at 01:23 UTC and on demand:
 
-1. runs the tests;
-2. downloads the set that is online now and verifies it;
-3. builds a new set from the sources, compares it with the old one, signs it with the secret `TOOLKIT_DEFS_KEY` of the `publish` environment, which only the main branch may use;
-4. verifies the result and deploys `v1/` to GitHub Pages.
+1. checks that the signing key is not a repository secret (a job outside the `publish` environment fails the run if it can see it);
+2. runs the tests;
+3. downloads the set that is online now and verifies it;
+4. builds a new set from the sources, compares it with the old one, signs it with the secret `TOOLKIT_DEFS_KEY` of the `publish` environment, which only the main branch may use;
+5. verifies the result and deploys `v1/` to GitHub Pages.
 
-When a build fails, nothing is published, and the job "report" opens the issue "Daily lists failed" (or adds to it while it is open) with the failing gate. The keep-alive commit runs either way, so failing builds never let GitHub switch the schedule off.
+Every build writes a short report to the run summary: the gates, keep-list hits, new certificate entries, names listed under a system prefix, trims and holds, how many short names each rule dropped, and the 50 listed hosts with the fewest labels. When a build fails, or when the report needs a look (a new keep-list hit, a new certificate entry, a new name under a system prefix, a trim or a hold), the job "report" opens the issue "Daily lists" or, while it is open, puts the latest report in its body and adds a comment. Text from the sources reaches the issue without backticks or "@". The keep-alive commit runs either way, so failing builds never let GitHub switch the schedule off.
 
-Run by hand with **Actions > publish > Run workflow**. The option "allow_drop" accepts a set that is more than 30% smaller, for when a source really shrank; "allow_growth" accepts app entries more than 25% up.
+Run by hand with **Actions > publish > Run workflow**. The option "allow_drop" accepts a set that is more than 30% smaller, for when a source really shrank; "allow_growth" accepts app entries more than 25% up and publishes a host source that more than doubled. A failing gate names the option that overrides it.
 
 The scripts in `scripts/` are a copy of the ones in the Toolkit repository. Change them there.
 

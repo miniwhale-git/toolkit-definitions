@@ -4,12 +4,14 @@
 //
 // keep-packages.txt, one entry per line ("#" starts a comment):
 //   com.whatsapp               this exact package is never listed
-//   com.android.*              no package under this prefix is listed
-//   com.android.core.mngi listed   an exception: a stalkerware name that imitates a system one. It
-//                              stays listed, labelled "... (name used by stalkerware)".
+//   com.android.*              a system prefix: a package under it that no exact line names is listed,
+//                              labelled "... (name used by stalkerware)", and printed. Stalkerware hides
+//                              behind such names; a real system app has an exact line.
+//   com.android.core.mngi listed   the same, already reviewed.
 // keep-certs.txt: the lower-case hex SHA-1 (40) or SHA-256 (64) of a certificate's DER bytes.
 // Either file may mark an entry "known": a source is known to list it, so dropping it is expected.
-// Every other hit is new; the build fails when one run drops more than MAX_NEW_HITS of those.
+// Every other exact or certificate hit is new; the build fails when one run drops more than
+// MAX_NEW_HITS of those. A listing under a prefix never counts toward that.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -77,13 +79,17 @@ export const loadKeepPackages = (file = KEEP_PACKAGES_FILE) => parseKeepPackages
 export const loadKeepCerts = (file = KEEP_CERTS_FILE) => parseKeepCerts(readFileSync(file, "utf8"), path.basename(file));
 export const loadKeepApps = () => ({ packages: loadKeepPackages(), certs: loadKeepCerts() });
 
-/** Why a package may not be listed: null, or { rule, known }. An exception under a prefix answers { listed: true }. */
+/**
+ * What the keep-list says about a package: null (nothing), { rule, known } (an exact line: drop it), or
+ * { listed: true, auto, rule } (under a system prefix: list it as "name used by ..."; `auto` when no
+ * "listed" line names it yet, so a person should look at it).
+ */
 export function packageRule(name, packages) {
-  if (packages.listed.has(name)) return { listed: true };
   const exact = packages.exact.get(name);
   if (exact) return { rule: `keep ${name}`, known: exact.known };
   const prefix = packages.prefixes.find((p) => name.startsWith(p));
-  return prefix ? { rule: `keep ${prefix}*`, known: false } : null;
+  if (packages.listed.has(name)) return { listed: true, auto: false, rule: `listed under ${prefix}*` };
+  return prefix ? { listed: true, auto: true, rule: `under ${prefix}*` } : null;
 }
 
 /** Why a certificate may not be listed: null, or { rule, known }. */

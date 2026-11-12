@@ -64,7 +64,7 @@ export const LABELS = {
   RCSLab: "RCS Lab (spyware)",
   OperationTriangulation: "Operation Triangulation (spyware)",
   WyrmSpy_DragonEgg: "WyrmSpy and DragonEgg (spyware)",
-  MercenarySpywareCampaign: "Mercenary spyware campaign",
+  MercenarySpywareCampaign: "Mercenary campaign (spyware)",
   Cellebrite: "Cellebrite (forensic tool)",
 };
 

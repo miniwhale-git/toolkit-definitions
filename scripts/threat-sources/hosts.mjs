@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { domainToASCII } from "node:url";
 import path from "node:path";
+import { nameLabelOf, registrableOf } from "./suffixes.mjs";
 import { keyOf } from "./tkl.mjs";
 
 const LABEL = /^[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?$/;
@@ -80,6 +81,7 @@ export function hostWalk(host) {
 }
 
 export const KEEP_FILE = path.join(import.meta.dirname, "keep-hosts.txt");
+export const SHORTENERS_FILE = path.join(import.meta.dirname, "shorteners.txt");
 
 /**
  * Parse the keep-list text. One host per line; "#" starts a comment. A line "host shared" marks a
@@ -102,7 +104,55 @@ export function parseKeepList(text, label = "keep-list") {
   return keep;
 }
 
-export const loadKeepList = (file = KEEP_FILE) => parseKeepList(readFileSync(file, "utf8"), path.basename(file));
+/** Parse shorteners.txt: one host per line, as the lists store it; "#" starts a comment. @returns {string[]} */
+export function parseShorteners(text, label = "shorteners.txt") {
+  const hosts = [];
+  const seen = new Set();
+  text.split(/\r?\n/).forEach((line, i) => {
+    const content = line.replace(/#.*/, "").trim();
+    if (!content) return;
+    if (normaliseHost(content) !== content) throw new Error(`${label} line ${i + 1}: "${content}" is not a host in the form the lists store`);
+    if (seen.has(content)) throw new Error(`${label} line ${i + 1}: ${content} is listed twice`);
+    seen.add(content);
+    hosts.push(content);
+  });
+  return hosts;
+}
+
+export const loadShorteners = (file = SHORTENERS_FILE) => parseShorteners(readFileSync(file, "utf8"), path.basename(file));
+
+/**
+ * The keep-list with every shortener added as a shared entry. A host keep-hosts.txt already has keeps its
+ * own flag: an entry without "shared" protects everything below it too, which is the stronger rule.
+ */
+export function withShorteners(keep, shorteners) {
+  const out = new Map(keep);
+  for (const host of shorteners) if (!out.has(host)) out.set(host, true);
+  return out;
+}
+
+/** keep-hosts.txt plus shorteners.txt, as the build uses them. */
+export const loadKeepList = (file = KEEP_FILE, shortenersFile = SHORTENERS_FILE) =>
+  withShorteners(parseKeepList(readFileSync(file, "utf8"), path.basename(file)), loadShorteners(shortenersFile));
+
+/** Longest name before the suffix that is always dropped as a bare domain ("gg.gg", "x.co", "qr1.be"). */
+export const SHORT_NAME = 4;
+/** Longest name before the suffix that is dropped as a bare domain when only one source lists it ("bitly.ws"). */
+export const SHORT_NAME_ONE_SOURCE = 6;
+
+/**
+ * Why a listed bare domain is dropped as too short to be one site, or null. "short": its name before the
+ * suffix is SHORT_NAME characters or fewer. "one source": SHORT_NAME_ONE_SOURCE or fewer and only one source
+ * lists it. Short bare domains are almost always shorteners or generic services; a bad page on one is a
+ * path, which a host list cannot express. A deeper host ("evil.gg.gg") and an address are never dropped here.
+ */
+export function shortNameRule(host, sources) {
+  if (registrableOf(host) !== host) return null;
+  const name = nameLabelOf(host);
+  if (name.length <= SHORT_NAME) return "short";
+  if (name.length <= SHORT_NAME_ONE_SOURCE && sources <= 1) return "one source";
+  return null;
+}
 
 /**
  * What the keep-list protects. A bad-host entry is refused when it is a kept host or a parent of

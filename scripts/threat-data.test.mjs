@@ -347,10 +347,12 @@ describe("app keep-lists", () => {
     ok(packages.exact.size >= 400, `only ${packages.exact.size} packages`);
     eq(packages.prefixes, ["android.", "com.android.", "com.google.android."]);
     for (const name of ["com.whatsapp", "com.facebook.katana", "com.instagram.android", "com.phonepe.app", "net.one97.paytm", "in.org.npci.upiapp", "com.sbi.lotusintouch", "com.truecaller", "com.miui.securitycenter", "com.sec.android.app.launcher", "org.telegram.messenger", "android"]) ok(packageRule(name, packages)?.rule, name);
-    for (const name of ["com.android.vending", "com.android.chrome", "com.google.android.gms", "com.google.android.apps.nbu.paisa.user", "android.ext.services"]) eq(packageRule(name, packages)?.known, false, `${name} under a prefix`);
+    // The real system apps under the prefixes have exact lines: a source that lists one is a dropped hit, never a listing.
+    for (const name of ["com.android.vending", "com.android.chrome", "com.google.android.gms", "com.google.android.apps.nbu.paisa.user", "com.android.systemui", "com.google.android.webview"]) eq(packageRule(name, packages), { rule: `keep ${name}`, known: false }, name);
     eq(packageRule("com.mxspy", packages), null);
     eq(packageRule("com.microsoft.familysafety", packages), null, "a monitoring app the sources list on purpose stays listed");
-    eq(packageRule("com.android.core.mngi", packages), { listed: true }, "a stalkerware name that imitates a system one");
+    eq(packageRule("com.android.core.mngi", packages), { listed: true, auto: false, rule: "listed under com.android.*" }, "a stalkerware name that imitates a system one");
+    eq(packageRule("android.ext.unknownspy", packages), { listed: true, auto: true, rule: "under android.*" }, "any other name under a prefix is listed, said carefully");
   });
 
   test("the AOSP test certificates are kept, and the digests are the real ones", () => {
@@ -762,10 +764,11 @@ describe("gates", () => {
   });
 
   test("the host budget is never cut silently", () => {
-    eq(failing([hostBudgetGate({ cap: 10, wanted: 10, over: new Map() })]), []);
-    const over = hostBudgetGate({ cap: 10, wanted: 13, over: new Map([["phishing", 3]]) });
-    eq(failing([over]), ["host budget"]);
-    ok(/13 hosts for 10 places; over by 3 \(phishing 3\)/.test(over.detail), over.detail);
+    eq(failing([hostBudgetGate({ cap: 10, wanted: 10, trims: [] })]), []);
+    const over = hostBudgetGate({ cap: 10, wanted: 13, trims: [{ id: "phishing", wanted: 5, cut: 3 }] }, 10);
+    eq(failing([over]), [], "a trim to fit passes, and says so");
+    ok(/^TRIMMED: 13 hosts for 10 places; cut 3 of 5 new hosts from phishing/.test(over.detail), over.detail);
+    eq(failing([hostBudgetGate({ cap: 10, wanted: 13, trims: [{ id: "phishing", wanted: 5, cut: 2 }] }, 11)]), ["host budget"], "a table that still does not fit");
   });
 
   test("new certificate entries against the previous set are printed one by one", () => {
@@ -1191,21 +1194,34 @@ describe("build", () => {
     eq([...a.set.files].every(([name, bytes]) => bytes.equals(b.set.files.get(name))), true);
   });
 
-  test("a host table over its budget stops the build with the counts; nothing is cut", async () => {
+  test("a host table over its budget is cut from the least trusted source, loudly, and the app lists still publish", async () => {
     const full = await run();
     const wanted = openTable(full.set.files.get("hosts.tkl"), "hosts").entryCount;
     const exact = await run({ hostBudget: 16 + 8 * wanted });
     eq(failing(exact.results), [], "a budget that fits exactly");
+    ok(!exact.results.find((r) => r.gate === "host budget").detail.includes("TRIMMED"));
     const small = await run({ hostBudget: 16 + 8 * 12 });
-    ok(failing(small.results).includes("host budget"), failing(small.results).join());
-    ok(/hosts for 11 places; over by/.test(small.results.find((r) => r.gate === "host budget").detail));
-    eq(openTable(small.set.files.get("hosts.tkl"), "hosts").entryCount, wanted, "every host is still in the table it refuses to write");
-    const parts = [{ id: "mvt", pkg: [], cert: [], sha: [], hosts: ["a.example", "b.example"], rejected: 0, raw: 2, notes: [] }, { id: "phishing", pkg: [], cert: [], sha: [], hosts: ["c.example", "d.example", "e.example"], rejected: 0, raw: 3, notes: [] }];
+    eq(failing(small.results), [], "a trim never stops the build");
+    const budgetDetail = small.results.find((r) => r.gate === "host budget").detail;
+    ok(/^TRIMMED: \d+ hosts for 11 places; cut .*\d+ of \d+ new hosts from phishing/.test(budgetDetail), budgetDetail);
+    eq(openTable(small.set.files.get("hosts.tkl"), "hosts").entryCount, 12, "the table holds what fits: 11 hosts and the canary");
+    eq(small.set.files.get("apps-pkg.tkl").equals(full.set.files.get("apps-pkg.tkl")), true, "the app tables are untouched");
+    ok(small.report.notify.includes("hosts trimmed to fit the budget"), small.report.notify.join());
+    ok(/TRIMMED \d+ of \d+ new hosts from phishing/.test(small.report.markdown));
+
+    const parts = [{ id: "mvt", pkg: [], cert: [], sha: [], hosts: ["alpha-one.example", "bravo-two.example"], rejected: 0, raw: 2, notes: [] }, { id: "phishing", pkg: [], cert: [], sha: [], hosts: ["charlie-three.example", "delta-four.example", "echo-five.example"], rejected: 0, raw: 3, notes: [] }];
     const over = assemble(parts, { keep: new Map(), hostBudget: 16 + 8 * 4 });
     eq(over.budget.cap, 3, "one of the four places is the canary's");
-    eq([over.budget.wanted, [...over.budget.over]], [5, [["phishing", 2]]]);
-    eq(over.hosts.length, 5);
-    eq(failing([hostBudgetGate(over.budget)]), ["host budget"]);
+    eq([over.budget.wanted, over.budget.trims], [5, [{ id: "phishing", wanted: 3, cut: 2 }]]);
+    eq(over.hosts.length, 3);
+    ok(over.hosts.includes("alpha-one.example") && over.hosts.includes("bravo-two.example"), "the most trusted source is whole");
+    const lowest = ["charlie-three.example", "delta-four.example", "echo-five.example"].sort((x, y) => Buffer.compare(keyOf(x), keyOf(y)))[0];
+    eq(over.hosts[2], lowest, "the cut source keeps its host with the lowest key");
+    eq(assemble(parts, { keep: new Map(), hostBudget: 16 + 8 * 4 }).hosts, over.hosts, "the same cut every run");
+    eq(failing([hostBudgetGate(over.budget, over.hosts.length)]), []);
+    // Two sources over: the last loses everything first, then the one before it.
+    const tight = assemble([...parts, { id: "certpl", pkg: [], cert: [], sha: [], hosts: ["foxtrot-six.example", "golf-seven.example"], rejected: 0, raw: 2, notes: [] }], { keep: new Map(), hostBudget: 16 + 8 * 4 });
+    eq(tight.budget.trims, [{ id: "certpl", wanted: 2, cut: 1 }, { id: "phishing", wanted: 3, cut: 3 }]);
   });
 
   test("the shortest listed names are printed for a person to look at", async () => {

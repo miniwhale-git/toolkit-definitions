@@ -1,13 +1,14 @@
 # Packages the app list must never contain, however the sources look. One per line ("#" starts a comment):
 #   package            this exact package is never listed (Android package names are case-sensitive)
-#   prefix.*           no package under this prefix is listed
-#   package listed     an exception under a protected prefix: a stalkerware name that imitates a system
-#                      one. It stays listed, labelled "... (name used by stalkerware)", because the app
-#                      tells a real system app from an imitation by its signer.
+#   prefix.*           a system prefix. A package under it that no exact line names is not dropped: it is
+#                      listed as "... (name used by stalkerware)" (or watchware, spyware) and printed,
+#                      because stalkerware hides behind system-like names and the app tells a real system
+#                      app from an imitation by its signer. It never counts toward the failure gate.
+#   package listed     the same, already reviewed (from the sources on 2026-11-12).
 #   package known      a source is known to list it; dropping it is expected and not counted as new.
-# The build drops every upstream entry that hits this list and prints each one. More than 3 new hits
-# in one run stop the build: that looks like a tampered source. Add a package when a user reports a
-# false warning; never remove one to "make a list bigger".
+# The build drops every upstream entry that hits an exact line (or keep-certs.txt) and prints each one.
+# More than 3 new hits of those in one run stop the build: that looks like a tampered source. Add a
+# package when a user reports a false warning; never remove one to "make a list bigger".
 #
 # Not on this list on purpose: apps the sources list as monitoring apps (Microsoft Family Safety,
 # Family Link and the like). Those are real findings, shown with the softer "watchware" label.
@@ -97,6 +98,277 @@ com.google.android.bacfup listed
 com.google.android.network listed
 com.google.android.safe listed
 com.google.android.service listed
+
+# ---- Real system apps under the protected prefixes ---------------------------------------------
+# A package under android., com.android. or com.google.android. that no line here names is listed
+# automatically as "name used by ..." when a source lists it. These exact names are the real ones: a
+# source that lists one of them is a dropped hit that counts toward the failure gate, never a listing.
+android.auto_generated_rro_product__
+android.auto_generated_rro_vendor__
+com.android.adservices.api
+com.android.apps.tag
+com.android.avatarpicker
+com.android.backupconfirm
+com.android.bips
+com.android.bluetooth
+com.android.bluetoothmidiservice
+com.android.browser
+com.android.calculator2
+com.android.calendar
+com.android.calllogbackup
+com.android.camera
+com.android.camera2
+com.android.captiveportallogin
+com.android.carrierconfig
+com.android.carrierdefaultapp
+com.android.cellbroadcastreceiver
+com.android.cellbroadcastreceiver.module
+com.android.cellbroadcastservice
+com.android.certinstaller
+com.android.chrome
+com.android.companiondevicemanager
+com.android.connectivity.resources
+com.android.contacts
+com.android.credentialmanager
+com.android.cts.ctsshim
+com.android.cts.priv.ctsshim
+com.android.defcontainer
+com.android.deskclock
+com.android.devicelockcontroller
+com.android.dialer
+com.android.documentsui
+com.android.dreams.basic
+com.android.dreams.phototable
+com.android.dynsystem
+com.android.egg
+com.android.email
+com.android.emergency
+com.android.exchange
+com.android.externalstorage
+com.android.ext.services
+com.android.ext.shared
+com.android.federatedcompute.services
+com.android.fileexplorer
+com.android.fmradio
+com.android.gallery3d
+com.android.healthconnect.controller
+com.android.hotspot2.osulogin
+com.android.hotwordenrollment.okgoogle
+com.android.hotwordenrollment.xgoogle
+com.android.htmlviewer
+com.android.ims
+com.android.imsserviceentitlement
+com.android.incallui
+com.android.inputdevices
+com.android.inputmethod.latin
+com.android.intentresolver
+com.android.internal.display.cutout.emulation.corner
+com.android.internal.display.cutout.emulation.double
+com.android.internal.display.cutout.emulation.hole
+com.android.internal.display.cutout.emulation.tall
+com.android.internal.systemui.navbar.gestural
+com.android.internal.systemui.navbar.threebutton
+com.android.internal.systemui.navbar.twobutton
+com.android.keychain
+com.android.launcher
+com.android.launcher2
+com.android.launcher3
+com.android.localtransport
+com.android.location.fused
+com.android.managedprovisioning
+com.android.mediacenter
+com.android.messaging
+com.android.mms
+com.android.mms.service
+com.android.mtp
+com.android.music
+com.android.musicfx
+com.android.networkstack
+com.android.networkstack.inprocess
+com.android.networkstack.permissionconfig
+com.android.networkstack.tethering
+com.android.nfc
+com.android.ondevicepersonalization.services
+com.android.ons
+com.android.pacprocessor
+com.android.packageinstaller
+com.android.permissioncontroller
+com.android.phone
+com.android.printservice.recommendation
+com.android.printspooler
+com.android.protips
+com.android.providers.blockednumber
+com.android.providers.calendar
+com.android.providers.contactkeys
+com.android.providers.contacts
+com.android.providers.downloads
+com.android.providers.downloads.ui
+com.android.providers.media
+com.android.providers.media.module
+com.android.providers.partnerbookmarks
+com.android.providers.settings
+com.android.providers.telephony
+com.android.providers.userdictionary
+com.android.provision
+com.android.proxyhandler
+com.android.quicksearchbox
+com.android.rkpdapp
+com.android.safetycenter.resources
+com.android.sdksandbox
+com.android.se
+com.android.server.telecom
+com.android.settings
+com.android.settings.intelligence
+com.android.sharedstoragebackup
+com.android.shell
+com.android.simappdialog
+com.android.smspush
+com.android.soundpicker
+com.android.soundrecorder
+com.android.statementservice
+com.android.stk
+com.android.storagemanager
+com.android.systemui
+com.android.systemui.accessibility.accessibilitymenu
+com.android.theme.font.notoserifsource
+com.android.theme.icon.circle
+com.android.theme.icon.squircle
+com.android.theme.icon.teardrop
+com.android.thememanager
+com.android.timezone.updater
+com.android.traceur
+com.android.updater
+com.android.uwb.resources
+com.android.vending
+com.android.virtualmachine.res
+com.android.vpndialogs
+com.android.wallpaper
+com.android.wallpaper.livepicker
+com.android.wallpaperbackup
+com.android.wallpapercropper
+com.android.wallpaperpicker
+com.android.webview
+com.android.wifi.dialog
+com.android.wifi.resources
+com.android.BBKClock
+com.google.android.accessibility.soundamplifier
+com.google.android.accessibility.switchaccess
+com.google.android.adservices.api
+com.google.android.apps.accessibility.voiceaccess
+com.google.android.apps.adm
+com.google.android.apps.authenticator2
+com.google.android.apps.bard
+com.google.android.apps.books
+com.google.android.apps.chromecast.app
+com.google.android.apps.classroom
+com.google.android.apps.customization.pixel
+com.google.android.apps.diagnosticstool
+com.google.android.apps.docs
+com.google.android.apps.docs.editors.docs
+com.google.android.apps.docs.editors.sheets
+com.google.android.apps.docs.editors.slides
+com.google.android.apps.dynamite
+com.google.android.apps.enterprise.dmagent
+com.google.android.apps.fitness
+com.google.android.apps.gcs
+com.google.android.apps.giant
+com.google.android.apps.googleassistant
+com.google.android.apps.healthdata
+com.google.android.apps.helprtc
+com.google.android.apps.inputmethod.hindi
+com.google.android.apps.magazines
+com.google.android.apps.maps
+com.google.android.apps.meetings
+com.google.android.apps.messaging
+com.google.android.apps.nbu.files
+com.google.android.apps.nbu.paisa.user
+com.google.android.apps.nexuslauncher
+com.google.android.apps.paidtasks
+com.google.android.apps.photos
+com.google.android.apps.photosgo
+com.google.android.apps.pixelmigrate
+com.google.android.apps.podcasts
+com.google.android.apps.recorder
+com.google.android.apps.restore
+com.google.android.apps.safetyhub
+com.google.android.apps.scone
+com.google.android.apps.searchlite
+com.google.android.apps.security.securityhub
+com.google.android.apps.subscriptions.red
+com.google.android.apps.tachyon
+com.google.android.apps.tips
+com.google.android.apps.translate
+com.google.android.apps.turbo
+com.google.android.apps.walletnfcrel
+com.google.android.apps.wallpaper
+com.google.android.apps.wallpaper.nexus
+com.google.android.apps.wear.companion
+com.google.android.apps.wellbeing
+com.google.android.apps.work.clouddpc
+com.google.android.apps.work.oobconfig
+com.google.android.apps.youtube.creator
+com.google.android.apps.youtube.kids
+com.google.android.apps.youtube.music
+com.google.android.as
+com.google.android.as.oss
+com.google.android.backuptransport
+com.google.android.calendar
+com.google.android.captiveportallogin
+com.google.android.cellbroadcastreceiver
+com.google.android.cellbroadcastservice
+com.google.android.configupdater
+com.google.android.connectivity.resources
+com.google.android.contacts
+com.google.android.deskclock
+com.google.android.dialer
+com.google.android.documentsui
+com.google.android.euicc
+com.google.android.ext.services
+com.google.android.ext.shared
+com.google.android.feedback
+com.google.android.gm
+com.google.android.gm.lite
+com.google.android.gms
+com.google.android.gsf
+com.google.android.gsf.login
+com.google.android.googlequicksearchbox
+com.google.android.healthconnect.controller
+com.google.android.hiddenmenu
+com.google.android.inputmethod.japanese
+com.google.android.inputmethod.korean
+com.google.android.inputmethod.latin
+com.google.android.inputmethod.pinyin
+com.google.android.keep
+com.google.android.marvin.talkback
+com.google.android.modulemetadata
+com.google.android.music
+com.google.android.networkstack
+com.google.android.networkstack.permissionconfig
+com.google.android.networkstack.tethering
+com.google.android.onetimeinitializer
+com.google.android.ondevicepersonalization.services
+com.google.android.packageinstaller
+com.google.android.partnersetup
+com.google.android.permissioncontroller
+com.google.android.play.games
+com.google.android.printservice.recommendation
+com.google.android.projection.gearhead
+com.google.android.rkpdapp
+com.google.android.safetycenter.resources
+com.google.android.settings.intelligence
+com.google.android.setupwizard
+com.google.android.syncadapters.calendar
+com.google.android.syncadapters.contacts
+com.google.android.trichromelibrary
+com.google.android.tts
+com.google.android.uwb.resources
+com.google.android.videos
+com.google.android.wearable.app
+com.google.android.webview
+com.google.android.wifi.resources
+com.google.android.youtube
+com.google.android.youtube.tv
+com.google.android.GoogleCamera
 
 # ---- Google (outside com.google.android.) -----------------------------------------------------------
 com.google.ar.core

@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "version": 2026111201,
+  "built": "2026-11-12T00:00:00Z",
+  "files": [
+    {
+      "name": "apps-pkg.tkl",
+      "sha256": "ebf836e5853a821ec648f12a8ca66586f7120f331789439b7890fc693ff3f5b9",
+      "bytes": 86,
+      "entries": 2
+    },
+    {
+      "name": "apps-cert.tkl",
+      "sha256": "8b52197e2c9386765866f7ec87563cd586285b82c347eebbc4d2f14188c370ef",
+      "bytes": 82,
+      "entries": 2
+    },
+    {
+      "name": "apps-sha.tkl",
+      "sha256": "9c42f664f526897b456372dea99d8c796f418552272c5a80a0bdd3b0682fe83e",
+      "bytes": 84,
+      "entries": 2
+    },
+    {
+      "name": "hosts.tkl",
+      "sha256": "65e9b326d9af06fd64bdd9ae96ebe129ce589cea687887115d5a914c829f8acb",
+      "bytes": 32,
+      "entries": 2
+    }
+  ],
+  "sources": [
+    {
+      "name": "Toolkit key check",
+      "licence": "CC0-1.0",
+      "url": "https://github.com/miniwhale-git/toolkit-definitions",
+      "entries": 4
+    }
+  ]
+}
