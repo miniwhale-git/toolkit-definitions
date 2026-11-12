@@ -63,7 +63,7 @@ If the app warns about a site that is fine, write to support@attnom.com with the
 
 ## How it runs
 
-`.github/workflows/publish.yml` runs every day at 01:23 UTC and on demand:
+`.github/workflows/publish-lists.yml` runs every day at 01:23 UTC and on demand:
 
 1. runs the tests;
 2. downloads the set that is online now and verifies it;
