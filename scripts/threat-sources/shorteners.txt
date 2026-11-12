@@ -214,6 +214,7 @@ onelink.me
 sng.link
 adj.st
 smart.link
+go.link
 urlgeni.us
 
 # ---- Link-in-bio and music link pages --------------------------------------------------------

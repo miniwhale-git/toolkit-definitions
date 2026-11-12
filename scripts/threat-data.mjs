@@ -96,7 +96,7 @@ export async function buildSet({ fetchText, keep, keepApps = NO_KEEP_APPS, now =
     ...sourceGates(built.perSource, rows, maxRejected),
     ...previousGates(built.files, version, previous?.manifest ?? null, { maxDrop: MAX_DROP, allowDrop, maxGrowth: MAX_GROWTH, allowGrowth, now: now.getTime() }),
     appKeepGate(built.appDrops),
-    shortNameGate(built.short),
+    shortNameGate(built.short, built.shortKept),
     hostGrowthGate(built.held),
     hostBudgetGate(built.budget, built.hosts.length),
     keepRescan(built.hosts, buildKeeper(keep)),
@@ -113,6 +113,7 @@ export async function buildSet({ fetchText, keep, keepApps = NO_KEEP_APPS, now =
     budget: built.budget,
     held: built.held,
     short: built.short,
+    shortKept: built.shortKept,
   });
   return { set, manifest, results, ok, lines: built.lines, hosts: built.hosts, report };
 }

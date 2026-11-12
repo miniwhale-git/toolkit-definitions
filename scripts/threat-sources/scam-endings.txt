@@ -1,0 +1,44 @@
+# Site endings scam messages favour: a copy of KnownHosts.SCAM_FAVOURED_ENDINGS in the app.
+#
+# The list writer keeps a short listed bare domain whose name starts or ends with one of these
+# (imitated-names.txt), or that ends in one of these (scam-endings.txt): see hosts.mjs shortNameCheck.
+# One word per line, lower case; "#" starts a comment. A test checks that this file equals the Kotlin set.
+
+bond
+quest
+lat
+xin
+autos
+hair
+beauty
+cam
+lol
+mom
+monster
+top
+xyz
+icu
+cfd
+sbs
+click
+link
+live
+shop
+online
+site
+store
+fun
+rest
+buzz
+cyou
+vip
+win
+loan
+work
+support
+help
+info
+biz
+app
+dev
+page

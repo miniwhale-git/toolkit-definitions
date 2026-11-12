@@ -16,7 +16,7 @@ import { CANARY } from "./threat-sources/canary.mjs";
 import { FIXTURE_ENTRIES, fixtureSet } from "./threat-sources/fixture-set.mjs";
 import { buildHostTable } from "./threat-sources/host-table.mjs";
 import { checkSet, readSet } from "./threat-sources/gates.mjs";
-import { loadKeepList, loadShorteners, parseKeepList, parseShorteners, shortNameRule, withShorteners } from "./threat-sources/hosts.mjs";
+import { IMITATED_NAMES, SCAM_ENDINGS, loadKeepList, loadShorteners, parseKeepList, parseShorteners, parseWords, shortNameCheck, shortNameRule, withShorteners } from "./threat-sources/hosts.mjs";
 import { loadKeepApps } from "./threat-sources/keep-apps.mjs";
 import { GENERIC_KIND_OF, KINDS, LABEL_KIND_OF, labelKind, nameUsedLabel, shownLabel, threatLabel } from "./threat-sources/labels.mjs";
 import { LABELS as MVT_LABELS, campaignLabel } from "./threat-sources/mvt.mjs";
@@ -133,16 +133,53 @@ describe("short bare domains", () => {
     eq([registrableOf("co.uk"), registrableOf("1.2.3.4")], [null, null]);
   });
 
-  test("the rule: four letters or fewer always, six or fewer when one source alone lists it, bare names only", () => {
-    eq(shortNameRule("gg.gg", 3), "short");
+  test("the rule: four letters or fewer, or six or fewer when one source alone lists it, bare names only", () => {
+    // gg.gg and abcd.co.uk were checked with two or three sources; a second source now keeps a short name
+    // (finding 1), so the length rule is checked with one. gg.gg stays out through shorteners.txt.
+    eq(shortNameRule("gg.gg", 1), "short");
     eq(shortNameRule("qr1.be", 1), "short");
-    eq(shortNameRule("abcd.co.uk", 2), "short");
+    eq(shortNameRule("abcd.co.uk", 1), "short");
     eq(shortNameRule("bitly.ws", 1), "one source");
     eq(shortNameRule("bitly.ws", 2), null, "two sources list it");
     eq(shortNameRule("abcdef.com", 1), "one source");
     eq(shortNameRule("abcdefg.com", 1), null);
     eq(shortNameRule("evil.gg.gg", 1), null, "a deeper host stays");
     eq(shortNameRule("203.0.113.9", 1), null, "an address is not a name");
+  });
+
+  test("a brand-built name, a scam ending or a second source keeps a short name (finding 1)", () => {
+    // The four DHL names the previous set had and this rule dropped, each listed by one source.
+    for (const host of ["dhl1.net", "dhl2.help", "dhlapp.top", "dhlpay.shop"]) {
+      eq(shortNameRule(host, 1), null, host);
+      eq(shortNameCheck(host, 1).exception, "brand", host);
+    }
+    eq(shortNameCheck("xsbi.in", 1), { rule: "short", exception: "brand" }, "a name that ends with one");
+    eq(shortNameCheck("upsx.de", 1), { rule: "short", exception: "brand" });
+    eq(shortNameCheck("qr9.top", 1), { rule: "short", exception: "scam ending" });
+    eq(shortNameCheck("abcdef.help", 1), { rule: "one source", exception: "scam ending" });
+    eq(shortNameCheck("qr9.de", 2), { rule: "short", exception: "two sources" });
+    eq(shortNameCheck("abcdefg.com", 1), { rule: null, exception: null }, "long enough: no rule, so no exception");
+    // The brand's bare name on another ending is most often its own site: still dropped.
+    eq(shortNameRule("dhl.de", 1), "short");
+    eq(shortNameRule("paypal.de", 1), "one source");
+    // Below a shortener nothing changes; the shortener itself never reaches this rule (keep-list).
+    eq(shortNameRule("dhl1.gg.gg", 1), null);
+  });
+
+  test("the writer's copies of the app's names and endings equal the Kotlin sets", { skip: !existsSync(path.join(APP, "security", "links", "KnownHosts.kt")) && "KnownHosts.kt is not in this repository" }, () => {
+    const kt = readFileSync(path.join(APP, "security", "links", "KnownHosts.kt"), "utf8");
+    const set = (name) => {
+      const block = new RegExp(`${name}[^=]*=\\s*setOf\\(([\\s\\S]*?)\\)`).exec(kt);
+      ok(block, `KnownHosts.kt has no ${name} = setOf(...)`);
+      return [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
+    };
+    const imitated = set("COMMONLY_IMITATED");
+    const endings = set("SCAM_FAVOURED_ENDINGS");
+    ok(imitated.length >= 50 && endings.length >= 30, `read ${imitated.length} names and ${endings.length} endings`);
+    eq([...IMITATED_NAMES].sort(), imitated, "run the export again: scripts/threat-sources/imitated-names.txt differs from KnownHosts.COMMONLY_IMITATED");
+    eq([...SCAM_ENDINGS].sort(), endings, "scripts/threat-sources/scam-endings.txt differs from KnownHosts.SCAM_FAVOURED_ENDINGS");
+    assert.throws(() => parseWords("dhl\ndhl\n", "x"), /twice/);
+    assert.throws(() => parseWords("DHL\n", "x"), /lower-case/);
   });
 
   test("it runs on the bulk lists only, counts each rule, and the curated spyware lists keep their short domains", () => {
@@ -156,8 +193,19 @@ describe("short bare domains", () => {
   test("the build names how many each rule dropped, with examples", async () => {
     const built = await run({ fetchText: sources({ [URLS.phishing]: "qr7.de\nabcde.de", [URLS.certPl]: "zz9.pl" }) });
     const gate = built.results.find((r) => r.gate === "short names");
-    ok(gate.ok && /^3 short bare domains dropped \(short certpl 1, short phishing 1, one source phishing 1\), e\.g\. zz9\.pl, qr7\.de, abcde\.de$/.test(gate.detail), gate.detail);
+    ok(gate.ok && /^3 short bare domains dropped \(short certpl 1, short phishing 1, one source phishing 1\), e\.g\. zz9\.pl, qr7\.de, abcde\.de; kept by an exception: brand 0, scam ending 0, two sources 0$/.test(gate.detail), gate.detail);
     ok(/qr7\.de/.test(gate.detail) && /Short bare domains dropped: 3/.test(built.report.markdown));
+  });
+
+  test("the build lists the DHL names again and counts each exception", async () => {
+    const extra = { [URLS.phishing]: "dhl1.net\ndhl2.help\ndhlapp.top\ndhlpay.shop\nqr8.top\nqr7.de\nzz8.pl", [URLS.certPl]: "zz8.pl" };
+    const built = await run({ fetchText: sources(extra) });
+    eq(failing(built.results), []);
+    const gate = built.results.find((r) => r.gate === "short names");
+    ok(/kept by an exception: brand 4, scam ending 1, two sources 2, e\.g\. /.test(gate.detail), gate.detail);
+    ok(/Short bare domains kept by an exception: 7; brand 4, scam ending 1, two sources 2\./.test(built.report.markdown), built.report.markdown);
+    for (const host of ["dhl1.net", "dhl2.help", "dhlapp.top", "dhlpay.shop", "qr8.top", "zz8.pl"]) ok(built.hosts.includes(host), host);
+    ok(!built.hosts.includes("qr7.de"));
   });
 });
 

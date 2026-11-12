@@ -33,7 +33,7 @@ export const shortestHosts = (hosts, n = 50) =>
  *             lines: string[], appDrops: Array<{ table: string, text: string, label: string, source: string, rule: string, known: boolean }>,
  *             autoListed: Array<{ text: string, label: string, source: string, rule: string }>,
  *             budget: { cap: number, wanted: number, trims: Array<{ id: string, wanted: number, cut: number }> },
- *             short: Array<{ id: string, rule: string, host: string }>, held: Array<object> }}
+ *             short: Array<{ id: string, rule: string, host: string }>, shortKept: Array<{ id: string, exception: string, host: string }>, held: Array<object> }}
  */
 export function assemble(parts, { keep, keepApps = NO_KEEP_APPS, hostBudget = LIMITS.hostsBytes, previous = null, allowGrowth = false }) {
   const lines = [];
@@ -106,6 +106,7 @@ export function assemble(parts, { keep, keepApps = NO_KEEP_APPS, hostBudget = LI
     autoListed: [...autoListed.values()],
     budget: { cap, wanted: host.wanted, trims: host.trims },
     short: host.short,
+    shortKept: host.shortKept,
     held: host.held,
   };
 }

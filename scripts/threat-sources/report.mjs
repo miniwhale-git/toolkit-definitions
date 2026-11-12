@@ -17,10 +17,11 @@ export const plain = (text) => String(text).replace(/[`@]/g, "").replace(/[\r\n\
  *           newCerts: Map<string, string> | null, autoListed: Array<{ text: string, label: string, source: string, rule: string }>,
  *           previousPkg: object | null, budget: { trims: Array<{ id: string, wanted: number, cut: number }> },
  *           held: Array<{ id: string, before: number, now: number, kept: number, allowed: boolean }>,
- *           short: Array<{ id: string, rule: string, host: string }>, shortest: string[], warnings?: string[] }} input
+ *           short: Array<{ id: string, rule: string, host: string }>, shortKept?: Array<{ id: string, exception: string, host: string }>,
+ *           shortest: string[], warnings?: string[] }} input
  * @returns {{ markdown: string, notify: string[] }} notify: why a person should look, empty when nothing needs it
  */
-export function buildReport({ version, ok, results, appDrops, newCerts, autoListed, previousPkg, budget, held, short, shortest, warnings = [] }) {
+export function buildReport({ version, ok, results, appDrops, newCerts, autoListed, previousPkg, budget, held, short, shortKept = [], shortest, warnings = [] }) {
   const hits = new Map();
   for (const d of appDrops) if (!hits.has(`${d.table} ${d.text}`)) hits.set(`${d.table} ${d.text}`, d);
   const freshHits = [...hits.values()].filter((d) => !d.known);
@@ -66,6 +67,9 @@ export function buildReport({ version, ok, results, appDrops, newCerts, autoList
   for (const s of short) byRule.set(`${s.rule} (${s.id})`, (byRule.get(`${s.rule} (${s.id})`) ?? 0) + 1);
   out.push(`- Short bare domains dropped: ${short.length}${byRule.size ? `; ${[...byRule].map(([k, n]) => `${k} ${n}`).join(", ")}` : ""}.`);
   if (short.length) out.push(`- For example: ${short.slice(0, 10).map((s) => plain(s.host)).join(" ")}`);
+  const keptBy = new Map(["brand", "scam ending", "two sources"].map((e) => [e, 0]));
+  for (const s of shortKept) keptBy.set(s.exception, keptBy.get(s.exception) + 1);
+  out.push(`- Short bare domains kept by an exception: ${shortKept.length}; ${[...keptBy].map(([k, n]) => `${k} ${n}`).join(", ")}.`);
   out.push("", "### The 50 listed hosts with the fewest labels");
   out.push(shortest.map(plain).join(" ") || "None.");
   out.push("");

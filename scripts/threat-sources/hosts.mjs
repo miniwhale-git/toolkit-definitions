@@ -135,23 +135,61 @@ export function withShorteners(keep, shorteners) {
 export const loadKeepList = (file = KEEP_FILE, shortenersFile = SHORTENERS_FILE) =>
   withShorteners(parseKeepList(readFileSync(file, "utf8"), path.basename(file)), loadShorteners(shortenersFile));
 
-/** Longest name before the suffix that is always dropped as a bare domain ("gg.gg", "x.co", "qr1.be"). */
+/** Longest name before the suffix that is dropped as a bare domain ("gg.gg", "x.co", "qr1.be"), unless an exception keeps it. */
 export const SHORT_NAME = 4;
 /** Longest name before the suffix that is dropped as a bare domain when only one source lists it ("bitly.ws"). */
 export const SHORT_NAME_ONE_SOURCE = 6;
 
+export const IMITATED_FILE = path.join(import.meta.dirname, "imitated-names.txt");
+export const SCAM_ENDINGS_FILE = path.join(import.meta.dirname, "scam-endings.txt");
+
+/** Parse a word list: one lower-case word per line; "#" starts a comment. @returns {string[]} */
+export function parseWords(text, label) {
+  const words = [];
+  text.split(/\r?\n/).forEach((line, i) => {
+    const content = line.replace(/#.*/, "").trim();
+    if (!content) return;
+    if (!/^[a-z0-9]+$/.test(content)) throw new Error(`${label} line ${i + 1}: "${content}" is not one lower-case word`);
+    if (words.includes(content)) throw new Error(`${label} line ${i + 1}: ${content} is listed twice`);
+    words.push(content);
+  });
+  return words;
+}
+
+/** The app's commonly imitated names (KnownHosts.COMMONLY_IMITATED), as exported to imitated-names.txt. */
+export const IMITATED_NAMES = parseWords(readFileSync(IMITATED_FILE, "utf8"), "imitated-names.txt");
+/** The app's scam-favoured endings (KnownHosts.SCAM_FAVOURED_ENDINGS), as exported to scam-endings.txt. */
+export const SCAM_ENDINGS = new Set(parseWords(readFileSync(SCAM_ENDINGS_FILE, "utf8"), "scam-endings.txt"));
+
 /**
- * Why a listed bare domain is dropped as too short to be one site, or null. "short": its name before the
- * suffix is SHORT_NAME characters or fewer. "one source": SHORT_NAME_ONE_SOURCE or fewer and only one source
- * lists it. Short bare domains are almost always shorteners or generic services; a bad page on one is a
- * path, which a host list cannot express. A deeper host ("evil.gg.gg") and an address are never dropped here.
+ * What the short-name rule says about a listed host: `rule` is why its length alone would drop it ("short": its
+ * name before the suffix is SHORT_NAME characters or fewer; "one source": SHORT_NAME_ONE_SOURCE or fewer and only
+ * one source lists it), and `exception` why it stays listed all the same, checked in this order:
+ *   "brand"       the name starts or ends with a commonly imitated name and is longer than it ("dhl1.net",
+ *                 "dhlpay.shop"); the bare name on another ending ("dhl.de") is most often the company's own site;
+ *   "scam ending" it ends in an ending scam messages favour ("dhl2.help");
+ *   "two sources" two or more sources list it.
+ * Short bare domains are otherwise almost always shorteners or generic services; a bad page on one is a path,
+ * which a host list cannot express. A deeper host ("evil.gg.gg") and an address are never dropped here.
+ * @returns {{ rule: null | "short" | "one source", exception: null | "brand" | "scam ending" | "two sources" }}
  */
-export function shortNameRule(host, sources) {
-  if (registrableOf(host) !== host) return null;
+export function shortNameCheck(host, sources, { names = IMITATED_NAMES, endings = SCAM_ENDINGS } = {}) {
+  const none = { rule: null, exception: null };
+  if (registrableOf(host) !== host) return none;
   const name = nameLabelOf(host);
-  if (name.length <= SHORT_NAME) return "short";
-  if (name.length <= SHORT_NAME_ONE_SOURCE && sources <= 1) return "one source";
-  return null;
+  const rule = name.length <= SHORT_NAME ? "short" : name.length <= SHORT_NAME_ONE_SOURCE && sources <= 1 ? "one source" : null;
+  if (rule === null) return none;
+  let exception = null;
+  if (names.some((b) => name.length > b.length && (name.startsWith(b) || name.endsWith(b)))) exception = "brand";
+  else if (endings.has(host.slice(host.lastIndexOf(".") + 1))) exception = "scam ending";
+  else if (sources >= 2) exception = "two sources";
+  return { rule, exception };
+}
+
+/** Why a listed bare domain is dropped as too short to be one site, or null (see shortNameCheck). */
+export function shortNameRule(host, sources) {
+  const { rule, exception } = shortNameCheck(host, sources);
+  return exception === null ? rule : null;
 }
 
 /**

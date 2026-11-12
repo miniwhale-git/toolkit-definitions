@@ -627,6 +627,8 @@ bestbuy.com
 etsy.com
 shopify.com
 dhl.com
+# DHL Parcel Poland's own service; a bulk list names it, and the short-name rule no longer drops brand names.
+dhl24.com.pl
 fedex.com
 ups.com
 usps.com

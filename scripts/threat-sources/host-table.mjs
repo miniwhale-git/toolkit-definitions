@@ -1,12 +1,12 @@
 // The host table from the host sources, in four steps, each counted:
 //   1. every source's hosts normalised and checked against the keep-list (shorteners included);
-//   2. short bare domains dropped from the bulk lists (hosts.mjs shortNameRule);
+//   2. short bare domains dropped from the bulk lists, unless an exception keeps them (hosts.mjs shortNameCheck);
 //   3. a source that more than doubled since the previous set is held at its previous data;
 //   4. the sources added most trusted first; over the size budget, the cut comes from the least
 //      trusted source, keeping its hosts with the lowest keys.
 // Nothing is cut silently: every drop, hold and trim is returned for the gates and the report.
 
-import { applyKeepList, buildKeeper, readHost, shortNameRule } from "./hosts.mjs";
+import { applyKeepList, buildKeeper, readHost, shortNameCheck } from "./hosts.mjs";
 import { HOST_PRIORITY, MAX_SOURCE_GROWTH, SHORT_NAME_SOURCES } from "./sources.mjs";
 import { keyOf, lookupText } from "./tkl.mjs";
 
@@ -20,7 +20,7 @@ const hexKey = (host) => keyOf(host).toString("hex");
  *   previous: the previous set's host table (as openTable gives it) and each source's entries in its manifest.
  *   appEntries: each source's app entries in this build, so its whole count compares with the manifest's.
  * @returns {{ hosts: string[], counts: Map<string, number>, lines: string[], wanted: number,
- *             short: Array<{ id: string, rule: string, host: string }>, held: Array<{ id: string, before: number, now: number, kept: number, allowed: boolean }>,
+ *             short: Array<{ id: string, rule: string, host: string }>, shortKept: Array<{ id: string, exception: string, host: string }>, held: Array<{ id: string, before: number, now: number, kept: number, allowed: boolean }>,
  *             trims: Array<{ id: string, wanted: number, cut: number }>, rejected: Map<string, number> }}
  */
 export function buildHostTable(parts, { keep, cap, previous = null, appEntries = new Map(), allowGrowth = false, shortSources = SHORT_NAME_SOURCES, maxGrowth = MAX_SOURCE_GROWTH }) {
@@ -58,18 +58,20 @@ export function buildHostTable(parts, { keep, cap, previous = null, appEntries =
     );
   }
 
-  // 2. Short bare domains, from the bulk lists only. A name two sources list is less likely a mistake.
+  // 2. Short bare domains, from the bulk lists only. A brand-built name, a scam ending or a second source keeps one.
   const listedBy = new Map();
   for (const hosts of kept.values()) for (const host of hosts) listedBy.set(host, (listedBy.get(host) ?? 0) + 1);
   const short = [];
+  const shortKept = [];
   for (const [id, hosts] of kept) {
     if (!shortSources.includes(id)) continue;
     kept.set(
       id,
       hosts.filter((host) => {
-        const rule = shortNameRule(host, listedBy.get(host));
-        if (rule) short.push({ id, rule, host });
-        return rule === null;
+        const { rule, exception } = shortNameCheck(host, listedBy.get(host));
+        if (rule && exception) shortKept.push({ id, exception, host });
+        else if (rule) short.push({ id, rule, host });
+        return rule === null || exception !== null;
       }),
     );
   }
@@ -109,12 +111,13 @@ export function buildHostTable(parts, { keep, cap, previous = null, appEntries =
     for (const host of fresh) accepted.set(hexKey(host), host);
     counts.set(part.id, hosts.length - cut);
     const shortHere = short.filter((s) => s.id === part.id);
+    const keptHere = shortKept.filter((s) => s.id === part.id).length;
     const hold = held.find((h) => h.id === part.id && !h.allowed);
     lines.push(
-      `hosts ${part.id}: ${notes.get(part.id)}, ${shortHere.length} short bare domains dropped${hold ? `, HELD at its previous data (${hold.before} -> ${hold.now} entries; ${hold.kept} hosts already listed kept)` : ""}, ${hosts.length - fresh.length - cut} already listed by an earlier source, ${fresh.length} added${cut ? `, ${cut} CUT to fit the budget` : ""}`,
+      `hosts ${part.id}: ${notes.get(part.id)}, ${shortHere.length} short bare domains dropped${keptHere ? ` (${keptHere} more kept by an exception)` : ""}${hold ? `, HELD at its previous data (${hold.before} -> ${hold.now} entries; ${hold.kept} hosts already listed kept)` : ""}, ${hosts.length - fresh.length - cut} already listed by an earlier source, ${fresh.length} added${cut ? `, ${cut} CUT to fit the budget` : ""}`,
     );
   }
   const hosts = [...accepted.values()];
   lines.push(`hosts: ${hosts.length} of a ${cap}-entry budget${trims.length ? `; ${wanted - hosts.length} cut` : ""}`);
-  return { hosts, counts, lines, wanted, short, held, trims, rejected };
+  return { hosts, counts, lines, wanted, short, shortKept, held, trims, rejected };
 }

@@ -231,13 +231,19 @@ export function hostGrowthGate(held) {
   return result("host growth", true, `${named.join("; ")}${anyHeld ? ". If the source really grew, run the workflow with allow_growth (--allow-growth)" : ""}`);
 }
 
-/** What the short-name rule dropped, by rule and source, with examples. Never a failure. */
-export function shortNameGate(short) {
-  if (short.length === 0) return result("short names", true, "no short bare domain dropped");
+/**
+ * What the short-name rule dropped, by rule and source, with examples, and how many short names each exception kept
+ * ("brand", "scam ending", "two sources"; zero counts are printed too). Never a failure.
+ */
+export function shortNameGate(short, shortKept = []) {
+  const keptBy = new Map(["brand", "scam ending", "two sources"].map((e) => [e, 0]));
+  for (const s of shortKept) keptBy.set(s.exception, keptBy.get(s.exception) + 1);
+  const kept = `; kept by an exception: ${[...keptBy].map(([k, n]) => `${k} ${n}`).join(", ")}${shortKept.length ? `, e.g. ${shortKept.slice(0, 10).map((s) => s.host).join(", ")}` : ""}`;
+  if (short.length === 0) return result("short names", true, `no short bare domain dropped${kept}`);
   const by = new Map();
   for (const s of short) by.set(`${s.rule} ${s.id}`, (by.get(`${s.rule} ${s.id}`) ?? 0) + 1);
   const examples = short.slice(0, 10).map((s) => s.host).join(", ");
-  return result("short names", true, `${short.length} short bare domains dropped (${[...by].map(([k, n]) => `${k} ${n}`).join(", ")}), e.g. ${examples}`);
+  return result("short names", true, `${short.length} short bare domains dropped (${[...by].map(([k, n]) => `${k} ${n}`).join(", ")}), e.g. ${examples}${kept}`);
 }
 
 /**
