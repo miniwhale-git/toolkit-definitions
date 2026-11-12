@@ -11,7 +11,7 @@ Published at `https://miniwhale-git.github.io/toolkit-definitions/v1/`
 | `manifest.json` | Version (`yyyymmddNN`), build time, the list files with their SHA-256, size and entry count, and the sources with their licences. |
 | `manifest.json.sig` | Base64 Ed25519 signature over the exact bytes of `manifest.json`. |
 | `apps-pkg.tkl` | Android package names, each with a label such as `mSpy (stalkerware)`. |
-| `apps-cert.tkl` | SHA-256 fingerprints of signing certificates, with labels. |
+| `apps-cert.tkl` | SHA-256 or SHA-1 fingerprints of signing certificates, with labels. |
 | `apps-sha.tkl` | SHA-256 hashes of APK files, with labels. |
 | `hosts.tkl` | Host names used for phishing or spyware command servers. No labels. |
 
