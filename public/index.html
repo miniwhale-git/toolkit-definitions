@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toolkit definitions</title>
+<style>
+  :root { color-scheme: light dark; --fg: #1a1a1a; --bg: #ffffff; --muted: #5c5c5c; --line: #d8d8d8; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #e8e8e8; --bg: #161616; --muted: #a0a0a0; --line: #333333; } }
+  body { margin: 0 auto; max-width: 42rem; padding: 2rem 1rem; font: 16px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  h1 { font-size: 1.4rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  td, th { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); }
+  .muted { color: var(--muted); }
+  code { font-size: 0.9em; }
+</style>
+</head>
+<body>
+<h1>Toolkit definitions</h1>
+<p>Signed lists of known stalkerware and spyware apps and phishing hosts, rebuilt every day from open sources for the Toolkit app. This site holds no user data and runs no code for visitors.</p>
+<p id="status" class="muted">Reading the current set…</p>
+<table id="files" hidden><thead><tr><th>File</th><th>Entries</th><th>Bytes</th></tr></thead><tbody></tbody></table>
+<h2>Sources</h2>
+<table id="sources" hidden><thead><tr><th>Source</th><th>Licence</th><th>Entries</th></tr></thead><tbody></tbody></table>
+<p><a href="NOTICE.md">Credits and licence notices</a>. Questions or a false warning: support@attnom.com</p>
+<script>
+(function () {
+  var status = document.getElementById("status");
+  function row(table, cells) {
+    var tr = document.createElement("tr");
+    cells.forEach(function (text) { var td = document.createElement("td"); td.textContent = text; tr.appendChild(td); });
+    table.tBodies[0].appendChild(tr);
+    table.hidden = false;
+  }
+  fetch("v1/manifest.json", { cache: "no-store" }).then(function (r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function (m) {
+    status.textContent = "Version " + m.version + ", built " + m.built + ".";
+    m.files.forEach(function (f) { row(document.getElementById("files"), [f.name, String(f.entries), String(f.bytes)]); });
+    m.sources.forEach(function (s) { row(document.getElementById("sources"), [s.name, s.licence, String(s.entries)]); });
+  }).catch(function (e) { status.textContent = "Could not read v1/manifest.json (" + e.message + ")."; });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+{
+  "note": "Answers for the lists in this folder. found is the label, true for a listed host, false or null for none. A host is looked up by its ascii form, the name lower-cased and made punycode by nontransitional UTS-46. The public key is public-key.txt.",
+  "queries": [
+    {
+      "kind": "package",
+      "value": "com.alpha.spy",
+      "found": "Alpha (stalkerware)"
+    },
+    {
+      "kind": "package",
+      "value": "com.beta.watch",
+      "found": "Beta (watchware)"
+    },
+    {
+      "kind": "package",
+      "value": "com.gamma.rat",
+      "found": "Alpha (stalkerware)"
+    },
+    {
+      "kind": "package",
+      "value": "com.alpha.Spy",
+      "found": null
+    },
+    {
+      "kind": "cert",
+      "value": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "found": "Delta (spyware)"
+    },
+    {
+      "kind": "cert",
+      "value": "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+      "found": "Delta (spyware)"
+    },
+    {
+      "kind": "cert",
+      "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "found": null
+    },
+    {
+      "kind": "cert",
+      "value": "89abcdef0189abcdef0189abcdef0189abcdef01",
+      "found": "Zeta (stalkerware)"
+    },
+    {
+      "kind": "cert",
+      "value": "89ABCDEF0189ABCDEF0189ABCDEF0189ABCDEF01",
+      "found": "Zeta (stalkerware)"
+    },
+    {
+      "kind": "cert",
+      "value": "89abcdef0189abcdef0189abcdef0189abcdef0",
+      "found": null
+    },
+    {
+      "kind": "cert",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "found": "Toolkit list check"
+    },
+    {
+      "kind": "package",
+      "value": "toolkit.canary-check",
+      "found": "Toolkit list check"
+    },
+    {
+      "kind": "sha",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "found": "Toolkit list check"
+    },
+    {
+      "kind": "sha",
+      "value": "e33253ea6eb81b3dcf7977bfaeb99ddf09cbd12b19cd6aeb9b7a44b39324bc2d",
+      "found": "Epsilon (spyware)"
+    },
+    {
+      "kind": "sha",
+      "value": "cd9c8c2968a1a7ae93ab90914914c7c846a8b81c444f91f9e376836665e84a11",
+      "found": null
+    },
+    {
+      "kind": "host",
+      "value": "evil.example",
+      "ascii": "evil.example",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "login.evil.example",
+      "ascii": "login.evil.example",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "a.b.evil.example",
+      "ascii": "a.b.evil.example",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "BÜCHER.example",
+      "ascii": "xn--bcher-kva.example",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "www.xn--bcher-kva.example",
+      "ascii": "www.xn--bcher-kva.example",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "bad.test",
+      "ascii": "bad.test",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "good.example",
+      "ascii": "good.example",
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "example",
+      "ascii": null,
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "notevil.example",
+      "ascii": "notevil.example",
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "canary.toolkit.invalid",
+      "ascii": "canary.toolkit.invalid",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "www.canary.toolkit.invalid",
+      "ascii": "www.canary.toolkit.invalid",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "203.0.113.9",
+      "ascii": "203.0.113.9",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "203.0.113.10",
+      "ascii": "203.0.113.10",
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "203.0.113.90",
+      "ascii": "203.0.113.90",
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "x.203.0.113.9",
+      "ascii": null,
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "faß.example",
+      "ascii": "xn--fa-hia.example",
+      "found": true
+    },
+    {
+      "kind": "host",
+      "value": "fass.example",
+      "ascii": "fass.example",
+      "found": false
+    },
+    {
+      "kind": "host",
+      "value": "[2001:db8::1]",
+      "ascii": null,
+      "found": false
+    }
+  ]
+}

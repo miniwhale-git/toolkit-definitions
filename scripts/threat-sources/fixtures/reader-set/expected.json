@@ -1,0 +1,90 @@
+{
+    "note": "Written by the app's ReaderWrittenSetTest. found is the label, true for a listed host, false or null for none. The public key is public-key.txt.",
+    "queries": [
+        {
+            "kind": "package",
+            "value": "com.mspy.android",
+            "found": "mSpy (stalkerware)"
+        },
+        {
+            "kind": "package",
+            "value": "com.example.spy",
+            "found": "Spy app"
+        },
+        {
+            "kind": "package",
+            "value": "com.example.Spy",
+            "found": null
+        },
+        {
+            "kind": "package",
+            "value": "toolkit.canary-check",
+            "found": "Toolkit list check"
+        },
+        {
+            "kind": "cert",
+            "value": "f45ad729da07698c45b72dae8273a9e105585830214e978d6614f56ac93ca1b6",
+            "found": "Leaked maker signing key"
+        },
+        {
+            "kind": "cert",
+            "value": "0a068be4ba3331a40986b1239d9cbfa598300525",
+            "found": "Stalkerware signing key"
+        },
+        {
+            "kind": "cert",
+            "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "found": null
+        },
+        {
+            "kind": "cert",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000",
+            "found": "Toolkit list check"
+        },
+        {
+            "kind": "sha",
+            "value": "18676ef8c2bfa23c507fb486022fc313b7114cc3ef9950f4e6790dacbea8f6e2",
+            "found": "Known bad APK"
+        },
+        {
+            "kind": "sha",
+            "value": "33f5ffc583dd7162b67135da9d5220510545536643261ca0b3513a8e29fce72e",
+            "found": null
+        },
+        {
+            "kind": "host",
+            "value": "evil.net",
+            "found": true
+        },
+        {
+            "kind": "host",
+            "value": "www.evil.net",
+            "found": true
+        },
+        {
+            "kind": "host",
+            "value": "login.phish.example.com",
+            "found": true
+        },
+        {
+            "kind": "host",
+            "value": "phish.example.com",
+            "found": false
+        },
+        {
+            "kind": "host",
+            "value": "1.2.3.4",
+            "found": true
+        },
+        {
+            "kind": "host",
+            "value": "1.2.3.5",
+            "found": false
+        },
+        {
+            "kind": "host",
+            "value": "canary.toolkit.invalid",
+            "found": true
+        }
+    ]
+}

@@ -1,0 +1,2 @@
+# Byte for byte: the signed fixture set is compared by the tests, and the sample file keeps upstream CRLF.
+* -text

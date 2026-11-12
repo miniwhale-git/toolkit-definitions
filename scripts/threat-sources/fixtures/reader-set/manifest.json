@@ -1,0 +1,10 @@
+        { "format": 1,
+          "version": 2026111201,
+          "built": "2026-11-12T06:00:00Z",
+          "files": [
+            { "name": "apps-pkg.tkl", "sha256": "5ce2d44681248deb7c58c6d4f5985e93e506d8a658caa34bb53d48ad106113f7", "bytes": 92, "entries": 3 },
+{ "name": "apps-cert.tkl", "sha256": "5e43f0543ec9c7197c37e00e086e6d0bfe554c485da333c422cd228e80000a16", "bytes": 114, "entries": 3 },
+{ "name": "apps-sha.tkl", "sha256": "e7a60d038fcd1d1043c60d62bacb11c79ae26b012b1d86883dea16be0d238024", "bytes": 69, "entries": 2 },
+{ "name": "hosts.tkl", "sha256": "7030cae6af5fb28d7df2b61adfadcd41034c939d7b2020e5671c11af40fb7653", "bytes": 40, "entries": 4 } ],
+          "sources": [ { "name": "Echap stalkerware-indicators", "licence": "CC-BY-4.0",
+                         "url": "https://github.com/AssoEchap/stalkerware-indicators", "entries": 2 } ] }

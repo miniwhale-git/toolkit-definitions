@@ -1,0 +1,674 @@
+# Hosts the web list must never contain, however the upstream lists look.
+#
+# "host"         the host and every name below it is dropped from the bad-host table.
+# "host shared"  a shared-hosting, tunnel or registry domain: the name itself is dropped, but hosts
+#                below it (someone's page on blogspot.com or github.io) may be listed.
+# Parent names of every entry are protected too, so a lookup that walks up from one of these hosts
+# can never hit. Add a host here when a user reports a false warning; never remove one to "make a
+# list bigger". The build prints how many upstream entries each rule dropped.
+
+# ---- Search, mail and cloud: Google, Microsoft, Apple, Amazon --------------------------------
+google.com
+google.co.in
+google.co.uk
+google.com.au
+google.ca
+google.de
+google.fr
+google.co.jp
+google.com.br
+gmail.com
+googlemail.com
+googleapis.com shared
+storage.googleapis.com shared
+gstatic.com
+googleusercontent.com shared
+googlevideo.com
+googlesyndication.com
+googletagmanager.com
+google-analytics.com
+doubleclick.net
+youtube.com
+youtu.be
+ytimg.com
+youtube-nocookie.com
+android.com
+chrome.com
+chromium.org
+blogger.com
+withgoogle.com
+goo.gl
+g.co
+microsoft.com
+live.com
+outlook.com
+hotmail.com
+office.com
+office365.com
+microsoftonline.com
+sharepoint.com shared
+onedrive.com
+windows.com
+windows.net shared
+blob.core.windows.net shared
+azure.com
+cloudapp.azure.com shared
+azureedge.net shared
+bing.com
+msn.com
+skype.com
+xbox.com
+linkedin.com
+licdn.com
+github.com
+githubusercontent.com shared
+gitlab.com
+bitbucket.org
+apple.com
+icloud.com
+mzstatic.com
+amazon.com
+amazon.in
+amazon.co.uk
+amazon.de
+amazon.fr
+amazon.it
+amazon.es
+amazon.ca
+amazon.com.au
+amazon.co.jp
+amazon.com.br
+amazon.com.mx
+amazonpay.in
+primevideo.com
+audible.com
+amazonaws.com shared
+s3.amazonaws.com shared
+cloudfront.net shared
+awsstatic.com
+
+# ---- Social, messaging and media ----------------------------------------------------------------
+facebook.com
+fb.com
+fb.me
+fbcdn.net
+messenger.com
+instagram.com
+cdninstagram.com
+whatsapp.com
+whatsapp.net
+meta.com
+threads.net
+twitter.com
+x.com
+t.co
+twimg.com
+telegram.org
+t.me
+telegra.ph
+signal.org
+discord.com
+discordapp.com
+discord.gg
+snapchat.com
+pinterest.com
+reddit.com
+redd.it
+tiktok.com
+tumblr.com shared
+quora.com
+medium.com
+sharechat.com
+moj.app
+koo.in
+netflix.com
+nflxvideo.net
+hotstar.com
+disneyplus.com
+spotify.com
+jiocinema.com
+sonyliv.com
+zee5.com
+voot.com
+gaana.com
+jiosaavn.com
+wynk.in
+mxplayer.in
+twitch.tv
+vimeo.com
+dailymotion.com
+
+# ---- Software, devices and the open web -------------------------------------------------------------
+adobe.com
+salesforce.com
+oracle.com
+ibm.com
+intel.com
+nvidia.com
+amd.com
+qualcomm.com
+samsung.com
+mi.com
+xiaomi.com
+oppo.com
+vivo.com
+realme.com
+oneplus.com
+huawei.com
+motorola.com
+nokia.com
+hp.com
+dell.com
+lenovo.com
+asus.com
+acer.com
+sony.com
+lg.com
+mozilla.org
+firefox.com
+wikipedia.org
+wikimedia.org
+archive.org
+cloudflare.com
+akamai.com
+fastly.com
+openai.com
+dropbox.com
+box.com
+wetransfer.com
+zoom.us
+zoom.com
+webex.com
+slack.com
+notion.so
+atlassian.com
+w3.org
+apache.org
+python.org
+nodejs.org
+npmjs.com
+pypi.org
+docker.com
+stackoverflow.com
+stackexchange.com
+speedtest.net
+ookla.com
+wordpress.org
+virustotal.com
+kaspersky.com
+mcafee.com
+norton.com
+avast.com
+bitdefender.com
+malwarebytes.com
+eset.com
+symantec.com
+trendmicro.com
+quickheal.com
+
+# ---- Shortener and tunnel services: the service host is never listed ----------------------------------
+bit.ly
+tinyurl.com
+is.gd
+cutt.ly
+rb.gy
+ow.ly
+buff.ly
+lnkd.in
+amzn.to
+ngrok.io shared
+ngrok-free.app shared
+trycloudflare.com shared
+loca.lt shared
+duckdns.org shared
+no-ip.org shared
+no-ip.com
+ddns.net shared
+hopto.org shared
+zapto.org shared
+serveo.net shared
+
+# ---- Shared hosting and site builders: pages below these may be listed ------------------------------
+blogspot.com shared
+blogspot.in shared
+blogspot.co.uk shared
+blogspot.com.au shared
+blogspot.ca shared
+blogspot.de shared
+blogspot.fr shared
+blogspot.it shared
+blogspot.es shared
+blogspot.com.br shared
+blogspot.mx shared
+blogspot.jp shared
+blogspot.tw shared
+blogspot.ru shared
+blogspot.sg shared
+blogspot.ae shared
+wordpress.com shared
+wixsite.com shared
+wix.com
+weebly.com shared
+webs.com shared
+000webhostapp.com shared
+000webhost.com
+github.io shared
+gitlab.io shared
+netlify.app shared
+netlify.com shared
+vercel.app shared
+vercel.com
+pages.dev shared
+workers.dev shared
+web.app shared
+firebaseapp.com shared
+firebase.google.com
+appspot.com shared
+herokuapp.com shared
+glitch.me shared
+repl.co shared
+replit.app shared
+onrender.com shared
+fly.dev shared
+surge.sh shared
+azurewebsites.net shared
+azurestaticapps.net shared
+cloudflare-ipfs.com shared
+ipfs.io shared
+dweb.link shared
+w3s.link shared
+webflow.io shared
+carrd.co shared
+godaddysites.com shared
+square.site shared
+myshopify.com shared
+strikingly.com shared
+mystrikingly.com shared
+site123.me shared
+jimdofree.com shared
+jimdosite.com shared
+yolasite.com shared
+webnode.com shared
+angelfire.com shared
+tripod.com shared
+notion.site shared
+canva.site shared
+bubbleapps.io shared
+softr.app shared
+my.canva.site shared
+r2.dev shared
+vercel.dev shared
+stackblitz.io shared
+codesandbox.io shared
+sites.google.com
+
+# ---- Registry and country suffixes: the suffix itself is never a bad host ------------------------------
+co.in shared
+org.in shared
+net.in shared
+firm.in shared
+gen.in shared
+ind.in shared
+co.uk shared
+org.uk shared
+me.uk shared
+ltd.uk shared
+plc.uk shared
+net.uk shared
+com.au shared
+net.au shared
+org.au shared
+com.br shared
+net.br shared
+org.br shared
+com.cn shared
+net.cn shared
+org.cn shared
+com.mx shared
+co.za shared
+org.za shared
+co.jp shared
+ne.jp shared
+or.jp shared
+co.nz shared
+com.sg shared
+com.my shared
+com.pk shared
+com.bd shared
+com.np shared
+com.lk shared
+co.id shared
+or.id shared
+co.th shared
+com.ph shared
+com.vn shared
+com.tr shared
+com.ar shared
+com.co shared
+com.ng shared
+co.ke shared
+com.eg shared
+com.sa shared
+co.ae shared
+net.ae shared
+com.ua shared
+com.pl shared
+com.hk shared
+com.tw shared
+co.kr shared
+or.kr shared
+com.pe shared
+com.ve shared
+com.ec shared
+com.uy shared
+co.il shared
+org.il shared
+com.cy shared
+com.mt shared
+co.zw shared
+co.tz shared
+co.ug shared
+com.gh shared
+co.bw shared
+com.kh shared
+com.mm shared
+
+# ---- India: government, regulators and registries (below gov.in, nic.in, mil.in, bank.in and fin.in nobody but the owner registers; ac.in, edu.in and res.in hold many small institutions) ----
+gov.in
+nic.in
+ac.in shared
+edu.in shared
+res.in shared
+mil.in
+bank.in
+fin.in
+india.gov.in
+mygov.in
+rbi.org.in
+npci.org.in
+bhimupi.org.in
+irctc.co.in
+indianrail.gov.in
+nseindia.com
+bseindia.com
+mcxindia.com
+amfiindia.com
+nsdl.com
+cdslindia.com
+nsdl.co.in
+licindia.in
+epfindia.gov.in
+uidai.gov.in
+digilocker.gov.in
+incometax.gov.in
+incometaxindiaefiling.gov.in
+gst.gov.in
+umang.gov.in
+cowin.gov.in
+parivahan.gov.in
+passportindia.gov.in
+indiapost.gov.in
+cbse.gov.in
+ugc.ac.in
+nta.ac.in
+
+# ---- India: banks ------------------------------------------------------------------------------------------
+sbi.co.in
+onlinesbi.sbi
+sbi.bank.in
+sbicard.com
+hdfcbank.com
+hdfc.com
+icicibank.com
+icicicareers.com
+axisbank.com
+kotak.com
+kotakbank.com
+pnbindia.in
+netpnb.com
+bankofbaroda.in
+bankofbaroda.com
+canarabank.com
+canarabank.in
+unionbankofindia.co.in
+bankofindia.co.in
+indianbank.in
+iob.in
+centralbankofindia.co.in
+ucobank.com
+bankofmaharashtra.in
+psbindia.com
+indusind.com
+yesbank.in
+idfcfirstbank.com
+idbibank.in
+bandhanbank.com
+federalbank.co.in
+rblbank.com
+southindianbank.com
+karurvysyabank.com
+csb.co.in
+dcbbank.com
+tmb.in
+jkbank.com
+aubank.in
+equitasbank.com
+ujjivansfb.in
+esafbank.com
+suryodaybank.com
+hsbc.co.in
+sc.com
+citibank.co.in
+dbs.com
+dbs.in
+paytmbank.com
+airtel.in
+jio.com
+jiopay.com
+postpayments.in
+
+# ---- India: payments, investing and insurance -----------------------------------------------------------------
+paytm.com
+phonepe.com
+razorpay.com
+payu.in
+payu.com
+ccavenue.com
+billdesk.com
+cashfree.com
+juspay.in
+cred.club
+mobikwik.com
+freecharge.in
+bharatpe.com
+pinelabs.com
+instamojo.com
+lazypay.in
+zerodha.com
+kite.trade
+upstox.com
+groww.in
+angelone.in
+angelbroking.com
+5paisa.com
+icicidirect.com
+hdfcsec.com
+kotaksecurities.com
+motilaloswal.com
+sharekhan.com
+smallcase.com
+policybazaar.com
+hdfclife.com
+sbilife.co.in
+iciciprulife.com
+maxlifeinsurance.com
+tataaia.com
+bajajfinserv.in
+bajajfinance.in
+bajajallianz.com
+starhealth.in
+acko.com
+digitinsurance.com
+
+# ---- India: shops, travel, food and services -------------------------------------------------------------
+flipkart.com
+myntra.com
+ajio.com
+nykaa.com
+meesho.com
+snapdeal.com
+tatacliq.com
+bigbasket.com
+blinkit.com
+zeptonow.com
+swiggy.com
+zomato.com
+dunzo.com
+olacabs.com
+uber.com
+rapido.bike
+makemytrip.com
+goibibo.com
+cleartrip.com
+yatra.com
+ixigo.com
+easemytrip.com
+redbus.in
+railyatri.in
+abhibus.com
+bookmyshow.com
+olx.in
+quikr.com
+naukri.com
+shine.com
+indeed.com
+justdial.com
+urbancompany.com
+1mg.com
+pharmeasy.in
+netmeds.com
+practo.com
+lenskart.com
+tata.com
+tatamotors.com
+tatapower.com
+ril.com
+jiomart.com
+airtel.com
+myvi.in
+vodafoneidea.com
+bsnl.co.in
+mtnl.in
+tataplay.com
+dishtv.in
+hathway.com
+actcorp.in
+indiatimes.com
+hindustantimes.com
+ndtv.com
+thehindu.com
+indianexpress.com
+news18.com
+indiatoday.in
+aajtak.in
+bhaskar.com
+jagran.com
+amarujala.com
+
+# ---- Banks, cards and payments worldwide ---------------------------------------------------------------------
+paypal.com
+paypal.me
+venmo.com
+stripe.com
+wise.com
+chase.com
+bankofamerica.com
+wellsfargo.com
+citi.com
+citibank.com
+capitalone.com
+usbank.com
+pnc.com
+td.com
+tdbank.com
+hsbc.com
+barclays.co.uk
+barclays.com
+lloydsbank.com
+natwest.com
+santander.com
+santander.co.uk
+bnpparibas.com
+db.com
+ubs.com
+jpmorgan.com
+goldmansachs.com
+morganstanley.com
+americanexpress.com
+discover.com
+visa.com
+mastercard.com
+westernunion.com
+moneygram.com
+remitly.com
+
+# ---- Shopping, shipping and telecom worldwide -------------------------------------------------------------------
+ebay.com
+ebay.in
+aliexpress.com
+alibaba.com
+walmart.com
+target.com
+bestbuy.com
+etsy.com
+shopify.com
+dhl.com
+fedex.com
+ups.com
+usps.com
+bluedart.com
+delhivery.com
+dtdc.in
+ecomexpress.in
+xpressbees.com
+verizon.com
+att.com
+t-mobile.com
+vodafone.com
+
+# ---- Crypto exchanges and wallets ---------------------------------------------------------------------------------
+binance.com
+coinbase.com
+kraken.com
+wazirx.com
+coindcx.com
+bitfinex.com
+kucoin.com
+bybit.com
+okx.com
+crypto.com
+metamask.io
+trustwallet.com
+blockchain.com
+mudrex.com
+zebpay.com
+giottus.com
+
+# ---- Governments and bodies worldwide ----------------------------------------------------------------------------------
+gov.uk
+usa.gov
+irs.gov
+ssa.gov
+uscis.gov
+fbi.gov
+cdc.gov
+nih.gov
+whitehouse.gov
+europa.eu
+gov.au
+gc.ca
+canada.ca
+un.org
+who.int
+worldbank.org
+imf.org

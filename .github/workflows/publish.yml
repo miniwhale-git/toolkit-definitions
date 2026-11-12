@@ -1,0 +1,113 @@
+# Builds the threat lists every day and publishes them with GitHub Pages at /v1/.
+#
+# A gate failure (a source empty or changed shape, a big drop against the set now online, a
+# bad signature, a keep-list host in the table) fails the build step. Then nothing is deployed
+# and the last good set stays online.
+#
+# Needs: Settings > Pages > Source "GitHub Actions", and the repository secret TOOLKIT_DEFS_KEY
+# (the Ed25519 private key, PEM text).
+
+name: publish
+
+on:
+  schedule:
+    - cron: "23 1 * * *"
+  workflow_dispatch:
+    inputs:
+      allow_drop:
+        description: "Accept a set that is more than 30% smaller than the one online (a source really shrank)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Tests
+        run: node --test scripts/threat-data.test.mjs
+
+      - name: Download the set that is online now
+        id: previous
+        run: |
+          set +e
+          node scripts/threat-data.mjs fetch-published --out previous
+          code=$?
+          set -e
+          if [ "$code" = 0 ]; then
+            echo "args=--previous previous" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = 3 ]; then
+            echo "Nothing is published yet; this is the first set."
+            echo "args=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Could not read the published set (exit $code); not publishing."
+            exit "$code"
+          fi
+
+      - name: Build and sign
+        env:
+          TOOLKIT_DEFS_KEY: ${{ secrets.TOOLKIT_DEFS_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PREVIOUS_ARGS: ${{ steps.previous.outputs.args }}
+          ALLOW_DROP: ${{ inputs.allow_drop && '--allow-drop' || '' }}
+        # The secret is only in this step's environment. The script never prints it.
+        run: node scripts/threat-data.mjs build --out site/v1 --seq auto --require-signature $PREVIOUS_ARGS $ALLOW_DROP
+
+      - name: Verify what was built
+        run: node scripts/threat-data.mjs verify site/v1
+
+      - name: Add the page and the notices
+        run: |
+          cp public/index.html site/index.html
+          cp NOTICE.md site/NOTICE.md
+          touch site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # GitHub switches scheduled workflows off after 60 days without a commit. This keeps the schedule alive
+  # with an empty commit when the last one is older than 45 days.
+  keepalive:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Empty commit when the last one is old
+        run: |
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          if [ $(( (now - last) / 86400 )) -ge 45 ]; then
+            git config user.name attnom
+            git config user.email support@attnom.com
+            git commit --allow-empty -m "Keep the daily schedule enabled"
+            git push
+          fi

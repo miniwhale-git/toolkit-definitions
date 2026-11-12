@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "version": 2026010101,
+  "built": "2026-01-01T00:00:00Z",
+  "files": [
+    {
+      "name": "apps-pkg.tkl",
+      "sha256": "8805b764a7be3e6eb975d47dcb56b92b40f586f3fa6f6e432586896a101cf9f6",
+      "bytes": 112,
+      "entries": 4
+    },
+    {
+      "name": "apps-cert.tkl",
+      "sha256": "a05082c076f8897264aef65ef7a395b98e2d0d39152e5697becce6abb9fafc7e",
+      "bytes": 100,
+      "entries": 3
+    },
+    {
+      "name": "apps-sha.tkl",
+      "sha256": "7dbcb1c167f8cdeb66fbb4f224a818982be62420f19fc87f605bf47e4e03776a",
+      "bytes": 73,
+      "entries": 2
+    },
+    {
+      "name": "hosts.tkl",
+      "sha256": "26d65e7296dc3e7562f1fe31229e382145891a9b9b6a2002ac5f93807e100a38",
+      "bytes": 52,
+      "entries": 6
+    }
+  ],
+  "sources": [
+    {
+      "name": "Test fixture",
+      "licence": "CC0-1.0",
+      "url": "https://example.invalid/",
+      "entries": 8
+    }
+  ]
+}

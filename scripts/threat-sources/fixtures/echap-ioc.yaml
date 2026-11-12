@@ -1,0 +1,490 @@
+- name: TheTruthSpy
+  names:
+  - Copy9
+  - InoSPy
+  - ExactSpy
+  - FoneTracker
+  - GuestSpy
+  - MxSpy
+  - PhoneSpying
+  - PhoneTracker
+  - SpyZee
+  - TheTruthSpy
+  - TheSpyApp
+  - iSpyoo
+  - XySpy
+  type: stalkerware
+  packages:
+  - com.apspy.app
+  - com.fone
+  - com.guest
+  - com.ispyoo
+  - com.ispyoo.traceyou
+  - com.mxspy
+  - com.spyzee
+  - com.systemservice
+  - com.thetruth
+  - com.ttsapp.catchcheating
+  certificates:
+  - 31A6ECECD97CF39BC4126B8745CD94A7C30BF81C
+  - 36E6671BC4397F475A350905D9A649A5ADE97BB2
+  - 483716998F0C092FE82B0B12B1A4BA399D941318
+  - 4FF0174BEDC1D16BE55AC53B98599398AC461F82
+  - 56EF5244378FB6B4EF82D2B9E99BF41F7B97D93A
+  - 5D7B59F3AFB74D86CCD56440F99CA2FC83A23F22
+  - 917BB5B2D40EC40018541784A06285DE0F50F60F
+  - B0F639B67819EDBADC73B9FEFF2582FC58B8F115
+  - B1336A5F3A017394186563E84AE0D2649FC1697D
+  - CBDA86758FBE8E5A6AB805F493AA151B1F2B95F4
+  - D667A33203776F2285EBA3E826CD286356EF05D0
+  - FF8CCD9816B0524A58FBDE1809FB227DBCDFD692
+  - E6502D8A870C3F3910EA34F5B46D20D923047580
+  - DE648A3253C16692AF71141C069D15C87C3E5495
+  - F9181C6CF9AACB3AB1092F5338C3198A8D833431
+  - 5E3C376B52C672C81439358DE6348F25F96EAAA4
+  websites:
+  - app.phonespying.com
+  - copy9.com
+  - exactspy.com
+  - fonetracker.com
+  - free.spycell.net
+  - guestspy.com
+  - hespyapp.com
+  - innoaspy.com
+  - ispyoo.com
+  - mobidad.app
+  - mobilespyonline.com
+  - mxspy.com
+  - phoneparental.com
+  - phonespying.com
+  - phonetracking.net
+  - secondclone.com
+  - spyapps.net
+  - spycell.net
+  - thespyapp.com
+  - thetruthspy.com
+  - thetruthspys.com
+  - us.xnspy.pro
+  - weysys.com
+  - www.mxspy.com
+  - www.phonespying.com
+  - xpspy.com
+  - xnspy.pro
+  - inospy.com
+  distribution:
+    - app.fonetracker.com
+    - app.mobiletracking.app
+    - app.xpspy.com
+  c2:
+    ips:
+    - 69.64.74.239
+    - 69.64.81.166
+    - 69.64.81.49
+    - 69.64.81.98
+    - 69.64.91.29
+    domains:
+    - 1ca43.appspot.com
+    - copy9.com
+    - guestspy.com
+    - icloudappe.com
+    - media-sync-a.copy9.com
+    - media-sync-a.exactspy.com
+    - media-sync-a.fonetracker.com
+    - media-sync-a.ispyoo.com
+    - media-sync-a.thetruthspy.com
+    - media-sync-a100.fonetracker.com
+    - media-sync-a100.thetruthspy.com
+    - media-sync-a600.fonetracker.com
+    - media-sync-a621.fonetracker.com
+    - media-sync-a696.fonetracker.com
+    - media-sync-a710.fonetracker.com
+    - media-sync-a740.thetruthspy.com
+    - media-sync-a743.thetruthspy.com
+    - media-sync-a746.thetruthspy.com
+    - media-sync-a747.thetruthspy.com
+    - media-sync-a748.thetruthspy.com
+    - media-sync-a749.thetruthspy.com
+    - media-sync-a780.fonetracker.com
+    - media-sync-a785.fonetracker.com
+    - media-sync-a7xx.thetruthspy.com
+    - media-sync-a810.thetruthspy.com
+    - media-sync-a820.thetruthspy.com
+    - media-sync-a825.thetruthspy.com
+    - media-sync-a830.thetruthspy.com
+    - media-sync-a835.thetruthspy.com
+    - media-sync-a895.thetruthspy.com
+    - media-sync-a8xx.thetruthspy.com
+    - media-sync-a910.thetruthspy.com
+    - media-sync-a915.thetruthspy.com
+    - media-sync-a920.thetruthspy.com
+    - media-sync-a925.thetruthspy.com
+    - media-sync-a930.thetruthspy.com
+    - media-sync-a935.thetruthspy.com
+    - media-sync-a940.thetruthspy.com
+    - media-sync-a941.thetruthspy.com
+    - media-sync-a942.thetruthspy.com
+    - media-sync-a943.thetruthspy.com
+    - media-sync-a944.thetruthspy.com
+    - media-sync-a945.thetruthspy.com
+    - media-sync-a946.thetruthspy.com
+    - media-sync-a947.thetruthspy.com
+    - media-sync.systemserviceprovider.com
+    - media.thetruthspy.com
+    - microtracker-1ca43.firebaseio.com
+    - mxspy.com
+    - my.copy9.com
+    - my.ispyoo.com
+    - my.thetruthspy.com
+    - my.thespyapp.com
+    - phonespying.com
+    - phonetracking.net
+    - protocol.inospy.com
+    - protocol-a.copy9.com
+    - protocol-a.exactspy.com
+    - protocol-a.fonetracker.com
+    - protocol-a.guestspy.com
+    - protocol-a.ispyoo.com
+    - protocol-a.mxspy.com
+    - protocol-a.thetruthspy.com
+    - protocol-a100.fonetracker.com
+    - protocol-a100.phoneparental.com
+    - protocol-a100.thetruthspy.com
+    - protocol-a5.guestspy.com
+    - protocol-a58.guestspy.com
+    - protocol-a59.guestspy.com
+    - protocol-a6.thetruthspy.com
+    - protocol-a60.guestspy.com
+    - protocol-a600.fonetracker.com
+    - protocol-a610.copy9.com
+    - protocol-a610.thetruthspy.com
+    - protocol-a611.copy9.com
+    - protocol-a611.thetruthspy.com
+    - protocol-a612.copy9.com
+    - protocol-a614.copy9.com
+    - protocol-a615.copy9.com
+    - protocol-a616.copy9.com
+    - protocol-a617.copy9.com
+    - protocol-a618.copy9.com
+    - protocol-a620.copy9.com
+    - protocol-a621.copy9.com
+    - protocol-a65.guestspy.com
+    - protocol-a69.copy9.com
+    - protocol-a696.copy9.com
+    - protocol-a70.guestspy.com
+    - protocol-a710.copy9.com
+    - protocol-a712.fonetracker.com
+    - protocol-a72.thetruthspy.com
+    - protocol-a720.thetruthspy.com
+    - protocol-a721.thetruthspy.com
+    - protocol-a722.thetruthspy.com
+    - protocol-a723.thetruthspy.com
+    - protocol-a724.thetruthspy.com
+    - protocol-a725.thetruthspy.com
+    - protocol-a726.thetruthspy.com
+    - protocol-a727.thetruthspy.com
+    - protocol-a728.thetruthspy.com
+    - protocol-a729.thetruthspy.com
+    - protocol-a730.thetruthspy.com
+    - protocol-a731.thetruthspy.com
+    - protocol-a732.thetruthspy.com
+    - protocol-a733.thetruthspy.com
+    - protocol-a734.thetruthspy.com
+    - protocol-a735.thetruthspy.com
+    - protocol-a736.thetruthspy.com
+    - protocol-a737.thetruthspy.com
+    - protocol-a738.thetruthspy.com
+    - protocol-a739.thetruthspy.com
+    - protocol-a740.thetruthspy.com
+    - protocol-a741.thetruthspy.com
+    - protocol-a742.thetruthspy.com
+    - protocol-a743.thetruthspy.com
+    - protocol-a744.thetruthspy.com
+    - protocol-a745.mxspy.com
+    - protocol-a745.thetruthspy.com
+    - protocol-a746.thetruthspy.com
+    - protocol-a747.thetruthspy.com
+    - protocol-a748.thetruthspy.com
+    - protocol-a749.thetruthspy.com
+    - protocol-a780.copy9.com
+    - protocol-a780.fonetracker.com
+    - protocol-a780.ispyoo.com
+    - protocol-a780.mxspy.com
+    - protocol-a785.copy9.com
+    - protocol-a785.fonetracker.com
+    - protocol-a810.ispyoo.com
+    - protocol-a810.mxspy.com
+    - protocol-a810.thetruthspy.com
+    - protocol-a811.ispyoo.com
+    - protocol-a811.mxspy.com
+    - protocol-a880.ispyoo.com
+    - protocol-a89.ispyoo.com
+    - protocol-a89.mxspy.com
+    - protocol-a910.thetruthspy.com
+    - protocol-a915.thetruthspy.com
+    - protocol-a920.thetruthspy.com
+    - protocol-a925.thetruthspy.com
+    - protocol-a930.thetruthspy.com
+    - protocol-a935.thetruthspy.com
+    - protocol-a940.thetruthspy.com
+    - protocol-a941.thetruthspy.com
+    - protocol-a942.thetruthspy.com
+    - protocol-a943.thetruthspy.com
+    - protocol-a944.thetruthspy.com
+    - protocol-a945.thetruthspy.com
+    - protocol-a946.thetruthspy.com
+    - protocol-a947.thetruthspy.com
+    - protocol-monitor.thetruthspy.com
+    - protocol-viewer-a.copy9.com
+    - protocol.copy9.com
+    - protocol.guestspy.com
+    - protocol.ispyoo.com
+    - protocol.mxspy.com
+    - protocol.systemserviceprovider.com
+    - protocol.thetruthspy.com
+    - secondclone-2d312.firebaseio.com
+    - setupmail-a.icloudappe.com
+    - setupmail-a720.icloudappe.com
+    - setupmail-a722.icloudappe.com
+    - setupmail-a724.icloudappe.com
+    - setupmail-a725.icloudappe.com
+    - setupmail-a726.icloudappe.com
+    - setupmail-a727.icloudappe.com
+    - setupmail-a729.icloudappe.com
+    - setupmail-a732.icloudappe.com
+    - setupmail-a733.icloudappe.com
+    - setupmail-a734.icloudappe.com
+    - setupmail-a735.icloudappe.com
+    - setupmail-a737.icloudappe.com
+    - setupmail-a738.icloudappe.com
+    - setupmail-a740.icloudappe.com
+    - setupmail-a741.icloudappe.com
+    - setupmail-a742.icloudappe.com
+    - setupmail-a743.icloudappe.com
+    - setupmail-a744.icloudappe.com
+    - setupmail-a745.icloudappe.com
+    - setupmail-a746.icloudappe.com
+    - setupmail-a747.icloudappe.com
+    - setupmail-a748.icloudappe.com
+    - setupmail-a910.icloudappe.com
+    - setupmail-a915.icloudappe.com
+    - setupmail-a920.icloudappe.com
+    - setupmail.icloudappe.com
+    - support.phoneparental.com
+    - spyzee.com
+    - sync-a.copy9.com
+    - sync-a.exactspy.com
+    - sync-a.fonetracker.com
+    - sync-a.ispyoo.com
+    - sync-a.mxspy.com
+    - sync-a.thetruthspy.com
+    - sync-a100.fonetracker.com
+    - sync-a600.fonetracker.com
+    - sync-a712.fonetracker.com
+    - sync-a780.mxspy.com
+    - sync-a7xx.thetruthspy.com
+    - sync-a8xx.thetruthspy.com
+    - sync-a925.thetruthspy.com
+    - sync-a930.thetruthspy.com
+    - sync-a935.thetruthspy.com
+    - sync-a940.thetruthspy.com
+    - sync-a941.thetruthspy.com
+    - sync-a942.thetruthspy.com
+    - thetruth-db94a.firebaseio.com
+    - app.xyspy.com
+
+- name : jjspy
+  names:
+  - ttspy
+  type: stalkerware
+  packages:
+  - com.backup.tt
+  websites:
+  - www.jjspy.com
+  - www.ttspy.com
+  certificates:
+  - 002DD372C94E80600C7C60192CBD701A3C3B87EE
+  - 4AF16661FC885F7CC84358CCB8F272308436D5E3
+  - 6DFB725019C7784B400D940DAAEDAED18C5B898B
+  - D3E6A092741CBA59BE9308FBA72DF887EAB184FD
+  - D8418B279414687729D37B34E53AB75D502B9F73
+  - EE35E2740576480486307C991C762A3FBA8DA46D
+  - B8FCBCA563B1CD0E79CAC595002422C2E54072B7
+  - CF627144481D3F1DCFBB6CF12291C540AE325FBE
+  - 34B791B5D35A874D189202EEA1FA99188F58A4C1
+  - 933C19015525266982AC6D830CB6B3D25079777B
+  c2:
+    domains:
+    - api.ttspy.com
+    - cloud.ttspy.com
+    - jjspy.com
+    - jjspy.ml
+    - my.jjspy.com
+    - phone-backup-service.firebaseio.com
+    - rrspy.com
+    - rtc.ttspy.com
+    - service.n.weiguanai.cn
+    - service.weiguanai.cn
+    - ttjj.ga
+    - ttjj.tk
+    - ttjj.ml
+    - ttspy.com
+    - ttspy.net
+    - ttspy.top
+    - upload.weiguanai.cn
+    - ws.ttspy.com
+    - www.ttjj.tk
+    - wx.weiguanai.cn
+
+- name : KidsShield
+  names:
+  - TiSpy
+  - KidLogger
+  - MonitorMinor
+  - SelfSpy
+  - SpyTrac
+  - TelcadoAndroid
+  - TiFamily
+  - TracerSpy
+  - Triada
+  - VipTelefonProgrami
+  type: stalkerware
+  packages:
+  - com.protect
+  - com.aixlunro.uqfhkagb
+  - com.bzbqbkya.hgozttiu
+  - com.gzomoyig.qwgawtaz
+  - com.android.inputmethod.latinmy
+  - com.ntckdlhc.oifhnjwp
+  - com.selgdg.febgdsra
+  - com.selgdg.mardsdaf
+  - com.sepfsp.jasend
+  - com.bnahrrbc.kwexsnhl
+  - com.tbntxear.vfmkjxme
+  - com.fbhpdsej.gnuebduy
+  - com.uxgbipup.pdtvcgzc
+  - com.uzoifhzk.qmqnpwaf
+  - com.zkftwsel.fqnoquuv
+  - com.mnwkvijy.wzyxgrft
+  - net.kidlogger.kidlogger
+  - net.teslineservice.kidl5
+  - net.someapp1.somecorp2
+  - com.fhekpqbq.otlzonjx
+  websites:
+  - backupsoft.eu
+  - freespyapp.com
+  - kidlogger.net
+  - kidsshield.net
+  - monitorminor.com.tr
+  - pc.freespyapp.com
+  - pc.selfspy.com
+  - selfspy.com
+  - spytrac.com
+  - techinnovative.net
+  - tifamily.net
+  - tispy.net
+  - tracerspy.net
+  - ua.tispy.net
+  - viptelefonprogrami.com
+  - www.kidlogger.net
+  - www.selfspy.com
+  - ua.tispy.me
+  certificates:
+  - 0D025A887A1546585D9BBA6F023F42B8BE0274E1
+  - 1A6D10E15280C6A938EED9BEF53A31DA0CEBA45A
+  - 272CD0BC357FA03AF87940644CB8FFDECD2FDDC6
+  - 3397C095EAD93B13CC5B9979D1F3B4FAEF1D194C
+  - 35D1DB3904A84793394FE5DF7B678E263B1B33A0
+  - 5EF38D0143F601FD01AA39BFE9079E9927920208
+  - 6CA8C06D7DAC5F5685E014AE5C4D2062F77B42D6
+  - 789A24C1605F1BF2B6D64580C697BD38D9446A7E
+  - 8AE2267AEEA0DBFF7D7CC1C82E54343B1B0CFA22
+  - 8B187B3EBEF7D1BC8E32BEC78D36CBF95505A1C1
+  - 95D589A90971992A2038E5961B39C8B6BC77CF19
+  - A2EBDD14E2AE17F52363BCB751CCBE15BE5A2F8D
+  - AA4F85CD7C24116BB51FA733BE59290B7BB8C204
+  - F575CA9980D3075CF728F2081D9EC5F910CC17E8
+  - FD84821C80C1499A2446F6F7E13BF8BDA6A66402
+  - 77C411957F307F6B971C7C07825CA5EA06F0E36D
+  certificate_cname_re:
+  - ^Kids\WSafety\W[0-9]{2}-[0-9]{2}-[0-9]{2,4}\W[0-9]{2}:[0-9]{2}:[0-9]{2}$
+  certificate_organizations:
+  - Tesline-Service SRL
+  distribution:
+  - spyt.co
+  - kidsshield.net
+  c2:
+    ips:
+    - 52.22.130.9
+    domains:
+    - apprtc.appspot.com
+    - d.tispy.net
+    - freespyapp.com
+    - kidsshield.net
+    - login.quanly24h.net
+    - pc.backupsoft.eu
+    - pc.freespyapp.com
+    - pc.selfspy.com
+    - pc.viptelefonprogrami.com
+    - quanly24h.net
+    - spyt.co
+    - spytrac-app1.s3.amazonaws.com
+    - theodoi24h.com
+    - tispy.net
+    - ua.tispy.net
+    - viptelefonprogrami.com
+
+- name: MobiStealth
+  names:
+  - MobiStealth
+  - Stealthcell
+  type: stalkerware
+  packages:
+  - stealthLight.sys
+  - phone.Secure
+  - and.LocatorTrial
+  - and.GuardTrial
+  - lookOut.Secure
+  certificates:
+  - 5AD2ACB089F8BE5112FF5125D94036983DE3E8D5
+  - FED69D6F09AE8C98DD4053C1934CCAF57D31824D
+  certificate_organizations:
+  - mobizim
+  websites:
+  - mobistealth.com
+  - www.mobistealth.com
+  - www.mobilestealthreview.com
+  c2:
+    ip:
+    - 72.167.46.196
+    - 5.79.71.114
+    domains:
+    - einformatiks.com
+    - www.einformatiks.com
+    - dwn.vys.me
+    - www.vys.me
+    - vys.me
+
+- name: SMSForward
+  names:
+  - SMForw
+  type: stalkerware
+  packages:
+  - one.enix.smsforward
+  certificates:
+  - 1E15B0D27C0551061885340A3990D52A93F646B8
+
+- name: Ahmyth
+  type: stalkerware
+  packages:
+  - net.droid.talk218
+  - ahmyth.mine.king.ahmyth
+  certificates:
+  - 0ECD5FD80682776D804715AB5B8504DAF59A4B54
+  c2:
+    ip:
+    - 85.10.199.40
+
+- name: xHunter
+  type: stalkerware
+  packages:
+  - com.xhunter.client
