@@ -4,9 +4,11 @@
 // What we take: package names (apps-pkg), APK SHA-256 hashes (apps-sha) and certificate
 // fingerprints (apps-cert). Echap lists certificates as SHA-1 (40 hex); apps-cert takes both the
 // SHA-256 and the SHA-1 form, each as lower-case hex text. Labels read "Name (stalkerware)" or
-// "Name (watchware)". Where one package is in both files the watchware label wins: it is the
+// "Name (watchware)", or "Stalkerware" / "Monitoring app" when the name does not pass the label
+// filter (labels.mjs). Where one package is in both files the watchware label wins: it is the
 // softer claim, and Echap moved those apps there on purpose.
 
+import { threatLabel } from "./labels.mjs";
 import { parseYaml } from "./yaml.mjs";
 
 export const PACKAGE_NAME = /^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)+$/;
@@ -59,7 +61,7 @@ export function parseSamplesCsv(text, label) {
   });
 }
 
-const labelFor = (name, type) => `${name} (${type})`;
+const labelFor = (name, type) => threatLabel(name, type);
 
 /**
  * Merge the three files into table items. Watchware is applied first so its labels win.

@@ -1,6 +1,6 @@
 // manifest.json: build it, read it back strictly. The layout is the one in DefsFormat.kt.
 
-import { HEADER_BYTES, cleanText, sha256Hex } from "./tkl.mjs";
+import { HEADER_BYTES, KEY_BYTES, cleanText, sha256Hex } from "./tkl.mjs";
 
 export const FORMAT = 1;
 export const MANIFEST = "manifest.json";
@@ -8,18 +8,21 @@ export const SIGNATURE = "manifest.json.sig";
 
 /** The list files, in the order the manifest names them, with the table shape each must have. */
 export const FILES = [
-  { name: "apps-pkg.tkl", table: "pkg", keyBytes: 8, valueBytes: 2, required: true },
-  { name: "apps-cert.tkl", table: "cert", keyBytes: 8, valueBytes: 2, required: true },
-  { name: "apps-sha.tkl", table: "sha", keyBytes: 8, valueBytes: 2, required: false },
-  { name: "hosts.tkl", table: "hosts", keyBytes: 6, valueBytes: 0, required: true },
+  { name: "apps-pkg.tkl", table: "pkg", keyBytes: KEY_BYTES, valueBytes: 2, required: true },
+  { name: "apps-cert.tkl", table: "cert", keyBytes: KEY_BYTES, valueBytes: 2, required: true },
+  { name: "apps-sha.tkl", table: "sha", keyBytes: KEY_BYTES, valueBytes: 2, required: false },
+  { name: "hosts.tkl", table: "hosts", keyBytes: KEY_BYTES, valueBytes: 0, required: true },
 ];
 
 /** Limits from DefsFormat, plus the budget for the host table. */
 export const LIMITS = {
   manifestBytes: 64 * 1024,
   totalBytes: 12 * 1024 * 1024,
-  hostsBytes: 4 * 1024 * 1024,
+  hostsBytes: 6 * 1024 * 1024,
 };
+
+/** How far ahead of the clock a set's date may be before it is treated as wrong (DefsFormat.MAX_AHEAD_MS). */
+export const MAX_AHEAD_MS = 2 * 24 * 60 * 60 * 1000;
 
 /** yyyymmddNN as a number. */
 export function versionFor(date, seq) {
@@ -27,6 +30,15 @@ export function versionFor(date, seq) {
   const day = date.toISOString().slice(0, 10).replace(/-/g, "");
   return Number(day) * 100 + seq;
 }
+
+/** Start of the version's day, UTC, in epoch milliseconds. */
+export function versionDay(version) {
+  const day = Math.floor(version / 100);
+  return Date.UTC(Math.floor(day / 10000), (Math.floor(day / 100) % 100) - 1, day % 100);
+}
+
+/** True when the manifest's version day or built time is more than MAX_AHEAD_MS after `now` (ms). */
+export const datedAhead = (manifest, now) => versionDay(manifest.version) > now + MAX_AHEAD_MS || Date.parse(manifest.built) > now + MAX_AHEAD_MS;
 
 /**
  * @param {{ version: number, built: Date, files: Array<{ name: string, bytes: Buffer, entries: number }>,
@@ -108,7 +120,7 @@ export function parseManifest(bytes) {
     if (typeof f.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(f.sha256)) bad(`${f.name}: sha256 is not 64 lower-case hex`);
     if (!isCount(f.bytes) || !isCount(f.entries)) bad(`${f.name}: bytes and entries must be whole numbers`);
     if (f.bytes <= HEADER_BYTES || f.bytes > LIMITS.totalBytes) bad(`${f.name}: size ${f.bytes} out of range`);
-    if (f.entries < 1 || f.entries > Math.floor((f.bytes - HEADER_BYTES) / 6)) bad(`${f.name}: ${f.entries} entries cannot fit in ${f.bytes} bytes`);
+    if (f.entries < 1 || f.entries > Math.floor((f.bytes - HEADER_BYTES) / KEY_BYTES)) bad(`${f.name}: ${f.entries} entries cannot fit in ${f.bytes} bytes`);
     total += f.bytes;
   }
   for (const spec of FILES) if (spec.required && !names.has(spec.name)) bad(`${spec.name} is required and not listed`);

@@ -5,8 +5,10 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import { canaryEntry } from "./canary.mjs";
 import { hostWalk } from "./hosts.mjs";
-import { FILES, LIMITS, MANIFEST, SIGNATURE, parseManifest } from "./manifest.mjs";
-import { signatureValid } from "./sign.mjs";
+import { MAX_NEW_HITS } from "./keep-apps.mjs";
+import { labelAllowed } from "./labels.mjs";
+import { FILES, LIMITS, MANIFEST, SIGNATURE, datedAhead, parseManifest } from "./manifest.mjs";
+import { signedByAny } from "./sign.mjs";
 import { lookupText, openTable, sha256Hex, tableProblems } from "./tkl.mjs";
 
 const result = (gate, ok, detail) => ({ gate, ok, detail });
@@ -27,7 +29,8 @@ export const hostListed = (table, host) => hostWalk(host).some((name) => lookupT
  * Everything that can be checked from the set alone: it is what `build` runs before writing and
  * what `verify` runs on a folder.
  * @param {{ manifestBytes: Buffer, signature: string | null, files: Map<string, Buffer> }} set
- * @param {{ publicKey: import("node:crypto").KeyObject, keep?: Map<string, boolean>, requireSignature?: boolean }} options
+ * @param {{ publicKey: import("node:crypto").KeyObject | import("node:crypto").KeyObject[], keep?: Map<string, boolean>, requireSignature?: boolean }} options
+ *   publicKey may be one key or the list of keys any of which may sign (DefsFormat.PUBLIC_KEYS).
  */
 export function checkSet(set, { publicKey, keep, requireSignature = true }) {
   const out = [];
@@ -41,8 +44,9 @@ export function checkSet(set, { publicKey, keep, requireSignature = true }) {
 
   if (set.signature === null) out.push(result("signature", !requireSignature, requireSignature ? "manifest.json.sig is missing" : "not signed (no signing key was given)"));
   else {
-    const valid = signatureValid(set.manifestBytes, set.signature, publicKey);
-    out.push(result("signature", valid, valid ? "valid for DefsFormat.PUBLIC_KEY" : "does not verify against the public key"));
+    const keys = Array.isArray(publicKey) ? publicKey : [publicKey];
+    const index = signedByAny(set.manifestBytes, set.signature, keys);
+    out.push(result("signature", index >= 0, index >= 0 ? `valid for public key ${index + 1} of ${keys.length}` : `does not verify against any of the ${keys.length} public keys`));
   }
 
   // Files: present, hash, size and count as the manifest says, no extras.
@@ -73,6 +77,11 @@ export function checkSet(set, { publicKey, keep, requireSignature = true }) {
   // Order and duplicates, label indexes.
   const tableIssues = [...tables.values()].flatMap(tableProblems);
   out.push(result("tables", tableIssues.length === 0, tableIssues.length ? tableIssues.join("; ") : `${tables.size} tables sorted by unsigned key bytes, no duplicate keys, label indexes in range`));
+
+  // Labels: each one the app shows as it is (LabelText.shown), so nothing from a source reaches the screen unfiltered.
+  const labels = [...tables.values()].flatMap((t) => t.labels);
+  const badLabels = labels.filter((l) => !labelAllowed(l));
+  out.push(result("labels", badLabels.length === 0, badLabels.length ? `not plain names: ${badLabels.slice(0, 5).map((l) => JSON.stringify(l)).join(", ")}` : `${labels.length} labels pass the label filter`));
 
   // Canaries: every table answers its known entry, or the app refuses the set.
   const canaryIssues = [];
@@ -124,11 +133,26 @@ export function sourceGates(perSource, rows, maxRejected) {
   return out;
 }
 
-/** The set must be newer than the previous one, and no file (nor the total) may shrink by more than maxDrop. */
-export function previousGates(files, version, previousManifest, { maxDrop, allowDrop }) {
+/**
+ * The set must be newer than the previous one; no file (nor the total) may shrink by more than maxDrop;
+ * the app entries together may not grow by more than maxGrowth (sudden growth is as suspicious as a drop).
+ * A previous set dated more than two days after `now` is one phones refuse, so it does not set the floor.
+ */
+export function previousGates(files, version, previousManifest, { maxDrop, allowDrop, maxGrowth = Infinity, allowGrowth = false, now = Date.now() }) {
   if (!previousManifest) return [result("previous", true, "no previous set given, nothing to compare")];
-  const out = [result("version", version > previousManifest.version, `${version} against previous ${previousManifest.version}; it must be higher`)];
+  const ahead = datedAhead(previousManifest, now);
+  const out = [
+    ahead
+      ? result("version", true, `previous ${previousManifest.version} (built ${previousManifest.built}) is dated ahead of this build; phones refuse it, so ${version} may follow it`)
+      : result("version", version > previousManifest.version, `${version} against previous ${previousManifest.version}; it must be higher`),
+  ];
   const sum = (list) => list.reduce((n, f) => n + f.entries, 0);
+  const apps = (list) => sum(list.filter((f) => f.name !== "hosts.tkl"));
+  const before = apps(previousManifest.files);
+  const after = apps(files);
+  const grew = before > 0 && after > before * (1 + maxGrowth);
+  const growth = before > 0 ? `${(((after - before) / before) * 100).toFixed(1)}%` : "n/a";
+  out.push(result("growth", !grew || allowGrowth, `app entries ${before} -> ${after} (${growth})${grew ? (allowGrowth ? " (allowed by --allow-growth)" : `; more than ${maxGrowth * 100}% up`) : `, at most ${maxGrowth * 100}% up`}`));
   const drops = [];
   const check = (label, now, before) => {
     if (before > 0 && now < before * (1 - maxDrop)) drops.push(`${label} ${before} -> ${now} (${(((before - now) / before) * 100).toFixed(1)}% less)`);
@@ -145,4 +169,50 @@ export function previousGates(files, version, previousManifest, { maxDrop, allow
 export function keepRescan(hosts, keeper) {
   const bad = hosts.filter((host) => keeper.reason(host) !== null);
   return result("keep-list rescan", bad.length === 0, bad.length ? `still present: ${bad.slice(0, 10).join(", ")}` : `${hosts.length} hosts re-checked against the keep-list rules`);
+}
+
+/**
+ * The app keep-lists dropped what they must; more than `maxNew` distinct new hits in one run (entries the
+ * keep files do not mark "known") look like a tampered source, so the build stops. Every hit is named.
+ */
+export function appKeepGate(appDrops, maxNew = MAX_NEW_HITS) {
+  const byItem = new Map();
+  for (const d of appDrops) {
+    const key = `${d.table} ${d.text}`;
+    const seen = byItem.get(key) ?? { ...d, sources: new Set(), labels: new Set() };
+    seen.sources.add(d.source);
+    seen.labels.add(d.label);
+    byItem.set(key, seen);
+  }
+  const items = [...byItem.values()];
+  const fresh = items.filter((d) => !d.known);
+  const named = items.map((d) => `${d.table === "pkg" ? "package" : "certificate"} ${d.text} (${[...d.labels].slice(0, 3).join(", ")}; from ${[...d.sources].join(", ")}; ${d.rule}${d.known ? ", known" : ", NEW"})`);
+  const ok = fresh.length <= maxNew;
+  return result(
+    "app keep-lists",
+    ok,
+    `${items.length} distinct entries dropped, ${fresh.length} new (at most ${maxNew})${ok ? "" : ": a source may have been tampered with; review each and mark it \"known\" or fix the source"}${named.length ? `: ${named.join("; ")}` : ""}`,
+  );
+}
+
+/** Nothing is cut to fit: a host table over its budget stops the build, with the counts. */
+export function hostBudgetGate(budget) {
+  const over = [...budget.over].map(([id, n]) => `${id} ${n}`).join(", ");
+  return result("host budget", budget.wanted <= budget.cap, budget.wanted <= budget.cap ? `${budget.wanted} hosts of ${budget.cap}` : `${budget.wanted} hosts for ${budget.cap} places; over by ${budget.wanted - budget.cap} (${over}). Raise the budget in manifest.mjs and DefsFormat, or drop a source`);
+}
+
+/**
+ * Certificate entries that the previous set did not have, each as a line for the build log: a new
+ * certificate decides about every app signed with it, so a person should be able to see each one.
+ * @param {Array<{ text: string, label: string }>} entries the certificate items that went into the new table
+ * @param {{ files: Map<string, Buffer> } | null} previousSet
+ */
+export function newCertificateLines(entries, previousSet) {
+  if (!previousSet) return [`certificates: no previous set, ${new Set(entries.map((e) => e.text)).size} entries not compared`];
+  const bytes = previousSet.files.get("apps-cert.tkl");
+  if (!bytes) return ["certificates: the previous set has no apps-cert.tkl"];
+  const table = openTable(bytes, "apps-cert.tkl");
+  const fresh = new Map();
+  for (const e of entries) if (!fresh.has(e.text) && lookupText(table, e.text) === null) fresh.set(e.text, e.label);
+  return [`certificates: ${fresh.size} new against the previous set`, ...[...fresh].map(([hex, label]) => `new certificate entry: ${hex} ${label}`)];
 }

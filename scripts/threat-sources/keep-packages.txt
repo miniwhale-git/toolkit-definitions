@@ -1,0 +1,616 @@
+# Packages the app list must never contain, however the sources look. One per line ("#" starts a comment):
+#   package            this exact package is never listed (Android package names are case-sensitive)
+#   prefix.*           no package under this prefix is listed
+#   package listed     an exception under a protected prefix: a stalkerware name that imitates a system
+#                      one. It stays listed, labelled "... (name used by stalkerware)", because the app
+#                      tells a real system app from an imitation by its signer.
+#   package known      a source is known to list it; dropping it is expected and not counted as new.
+# The build drops every upstream entry that hits this list and prints each one. More than 3 new hits
+# in one run stop the build: that looks like a tampered source. Add a package when a user reports a
+# false warning; never remove one to "make a list bigger".
+#
+# Not on this list on purpose: apps the sources list as monitoring apps (Microsoft Family Safety,
+# Family Link and the like). Those are real findings, shown with the softer "watchware" label.
+
+# ---- System prefixes ------------------------------------------------------------------------------
+android
+android.*
+com.android.*
+com.google.android.*
+
+# ---- Stalkerware names that imitate system ones (exceptions, from the sources on 2026-11-12) -------
+android.helper.system listed
+android.sys.process listed
+com.android.core listed
+com.android.core.mngi listed
+com.android.core.mngj listed
+com.android.core.mngk listed
+com.android.core.mngl listed
+com.android.core.mngn listed
+com.android.core.mngo listed
+com.android.core.mngp listed
+com.android.core.mngq listed
+com.android.core.mngr listed
+com.android.core.mngs listed
+com.android.core.mngt listed
+com.android.core.mngu listed
+com.android.core.mngv listed
+com.android.core.mngw listed
+com.android.core.mngx listed
+com.android.core.mngy listed
+com.android.core.mngz listed
+com.android.core.mnt listed
+com.android.core.mnta listed
+com.android.core.mntah listed
+com.android.core.mntb listed
+com.android.core.mntd listed
+com.android.core.mnte listed
+com.android.core.mntf listed
+com.android.core.mntg listed
+com.android.core.mnth listed
+com.android.core.mnti listed
+com.android.core.mntj listed
+com.android.core.mntk listed
+com.android.core.mntl listed
+com.android.core.mntm listed
+com.android.core.mntn listed
+com.android.core.mnto listed
+com.android.core.mntp listed
+com.android.core.mntq listed
+com.android.core.mntr listed
+com.android.core.mnts listed
+com.android.core.mntt listed
+com.android.core.mntu listed
+com.android.core.mntv listed
+com.android.core.mntw listed
+com.android.core.mntx listed
+com.android.core.mnty listed
+com.android.core.mntz listed
+com.android.core.monitor listed
+com.android.core.monitor.debug listed
+com.android.core.monitor.null listed
+com.android.core.monitornull listed
+com.android.cored listed
+com.android.corew listed
+com.android.framework.safety listed
+com.android.fystem.maps listed
+com.android.innovaspy listed
+com.android.inputmethod.latinmy listed
+com.android.internet.a20200817 listed
+com.android.internet.a20210916 listed
+com.android.internet.a20220729 listed
+com.android.internet.a20220829 listed
+com.android.internet.a20220914 listed
+com.android.keyboardhelper listed
+com.android.omg listed
+com.android.phone.dialer listed
+com.android.preference.help.mole listed
+com.android.services listed
+com.android.settings.app listed
+com.android.system listed
+com.android.system.app listed
+com.android.system.configs.service listed
+com.android.system.devicelogs listed
+com.android.system.maps listed
+com.android.wifi.tracker listed
+com.google.android.bacfup listed
+com.google.android.network listed
+com.google.android.safe listed
+com.google.android.service listed
+
+# ---- Google (outside com.google.android.) -----------------------------------------------------------
+com.google.ar.core
+com.google.earth
+com.google.chromeremotedesktop
+com.google.audio.hearing.visualization.accessibility.scribe
+com.chrome.beta
+com.chrome.dev
+com.chrome.canary
+
+# ---- Meta -------------------------------------------------------------------------------------------
+com.whatsapp
+com.whatsapp.w4b
+com.facebook.katana
+com.facebook.orca
+com.facebook.lite
+com.facebook.mlite
+com.facebook.pages.app
+com.facebook.adsmanager
+com.facebook.talk
+com.facebook.services
+com.facebook.system
+com.facebook.appmanager
+com.instagram.android
+com.instagram.lite
+com.instagram.barcelona
+com.oculus.twilight
+
+# ---- Microsoft --------------------------------------------------------------------------------------
+com.microsoft.office.outlook
+com.microsoft.teams
+com.microsoft.office.officehubrow
+com.microsoft.office.word
+com.microsoft.office.excel
+com.microsoft.office.powerpoint
+com.microsoft.office.onenote
+com.microsoft.office.lens
+com.microsoft.skydrive
+com.microsoft.emmx
+com.microsoft.bing
+com.microsoft.launcher
+com.microsoft.appmanager
+com.microsoft.windowsintune.companyportal
+com.microsoft.todos
+com.microsoft.translator
+com.microsoft.xboxone.smartglass
+com.microsoft.rdc.androidx
+com.azure.authenticator
+com.skype.raider
+com.touchtype.swiftkey
+com.linkedin.android
+
+# ---- Samsung ----------------------------------------------------------------------------------------
+com.sec.android.app.launcher
+com.sec.android.app.camera
+com.sec.android.gallery3d
+com.sec.android.app.myfiles
+com.sec.android.app.sbrowser
+com.sec.android.app.popupcalculator
+com.sec.android.app.clockpackage
+com.sec.android.app.samsungapps
+com.sec.android.app.shealth
+com.sec.android.app.voicenote
+com.sec.android.app.music
+com.sec.android.easyMover
+com.sec.android.inputmethod
+com.sec.android.daemonapp
+com.samsung.android.honeyboard
+com.samsung.android.messaging
+com.samsung.android.dialer
+com.samsung.android.app.contacts
+com.samsung.android.calendar
+com.samsung.android.app.notes
+com.samsung.android.app.reminder
+com.samsung.android.email.provider
+com.samsung.android.spay
+com.samsung.android.samsungpass
+com.samsung.android.bixby.agent
+com.samsung.android.visionintelligence
+com.samsung.android.oneconnect
+com.samsung.android.app.watchmanager
+com.samsung.android.app.tips
+com.samsung.android.themestore
+com.samsung.android.game.gamehome
+com.samsung.android.game.gametools
+com.samsung.android.lool
+com.samsung.android.voc
+com.samsung.android.fmm
+com.samsung.android.scloud
+com.samsung.android.mobileservice
+com.samsung.android.app.spage
+com.samsung.android.video
+com.samsung.android.tvplus
+com.samsung.android.app.smartcapture
+com.samsung.android.forest
+com.samsung.android.mdx
+com.samsung.android.app.routines
+com.samsung.android.app.sharelive
+com.samsung.android.app.aodservice
+com.samsung.knox.securefolder
+com.osp.app.signin
+
+# ---- Xiaomi, Redmi, POCO ----------------------------------------------------------------------------
+com.miui.home
+com.miui.gallery
+com.miui.securitycenter
+com.miui.cleanmaster
+com.miui.player
+com.miui.videoplayer
+com.miui.notes
+com.miui.calculator
+com.miui.weather2
+com.miui.compass
+com.miui.screenrecorder
+com.miui.backup
+com.miui.cloudservice
+com.miui.cloudbackup
+com.miui.msa.global
+com.miui.analytics
+com.miui.daemon
+com.miui.bugreport
+com.miui.securityadd
+com.miui.guardprovider
+com.miui.yellowpage
+com.miui.android.fashiongallery
+com.miui.packageinstaller
+com.miui.huanji
+com.miui.miservice
+com.xiaomi.midrop
+com.xiaomi.mipicks
+com.xiaomi.market
+com.xiaomi.account
+com.xiaomi.finddevice
+com.xiaomi.scanner
+com.xiaomi.misettings
+com.xiaomi.glgm
+com.xiaomi.discover
+com.xiaomi.wearable
+com.xiaomi.hm.health
+com.xiaomi.smarthome
+com.mi.android.globalFileexplorer
+com.mi.android.globallauncher
+com.mi.globalbrowser
+com.mipay.wallet.in
+
+# ---- Oppo, realme, OnePlus ------------------------------------------------------------------------
+com.coloros.gallery3d
+com.coloros.filemanager
+com.coloros.calculator
+com.coloros.safecenter
+com.coloros.phonemanager
+com.coloros.backuprestore
+com.coloros.soundrecorder
+com.coloros.note
+com.coloros.alarmclock
+com.coloros.gamespace
+com.coloros.assistantscreen
+com.oppo.camera
+com.oplus.camera
+com.oppo.launcher
+com.oppo.market
+com.heytap.market
+com.heytap.browser
+com.heytap.themestore
+com.heytap.cloud
+com.heytap.usercenter
+com.heytap.pictorial
+com.nearme.gamecenter
+com.oneplus.gallery
+com.oneplus.camera
+com.oneplus.filemanager
+com.oneplus.calculator
+com.oneplus.note
+com.oneplus.deskclock
+com.oneplus.security
+com.oneplus.backuprestore
+net.oneplus.launcher
+net.oneplus.weather
+
+# ---- Vivo, iQOO -----------------------------------------------------------------------------------
+com.vivo.appstore
+com.bbk.appstore
+com.vivo.browser
+com.vivo.gallery
+com.vivo.weather
+com.bbk.launcher2
+com.bbk.theme
+com.vivo.easyshare
+com.vivo.space
+com.vivo.game
+com.vivo.assistant
+com.vivo.email
+com.vivo.findphone
+com.iqoo.secure
+
+# ---- Huawei, Honor, Motorola ------------------------------------------------------------------------
+com.huawei.appmarket
+com.huawei.hwid
+com.huawei.browser
+com.huawei.health
+com.huawei.android.launcher
+com.huawei.camera
+com.huawei.photos
+com.huawei.systemmanager
+com.huawei.hidisk
+com.huawei.android.thememanager
+com.motorola.launcher3
+
+# ---- Banks, payments and UPI (India) ---------------------------------------------------------------
+com.phonepe.app
+net.one97.paytm
+in.org.npci.upiapp
+com.mobikwik_new
+com.freecharge.android
+com.dreamplug.androidapp
+com.sbi.lotusintouch
+com.sbi.SBIFreedomPlus
+com.sbi.upi
+com.csam.icici.bank.imobile
+com.snapwork.hdfc
+com.enstage.wibmo.hdfc
+com.axis.mobile
+com.msf.kbank.mobile
+com.bankofbaroda.mconnect
+com.canarabank.mobility
+com.idfcfirstbank.optimus
+com.zerodha.kite3
+com.nextbillion.groww
+
+# ---- Banks, payments and money (elsewhere) ---------------------------------------------------------
+com.paypal.android.p2pmobile
+com.venmo
+com.squareup.cash
+com.zellepay.zelle
+com.revolut.revolut
+com.transferwise.android
+com.chase.sig.android
+com.infonow.bofa
+com.wf.wellsfargomobile
+com.citi.citimobile
+com.konylabs.capitalone
+com.usaa.mobile.android.usaa
+com.americanexpress.android.acctsvcs.us
+com.barclays.android.barclaysmobilebanking
+uk.co.hsbc.hsbcukmobilebanking
+com.grppl.android.shell.CMBlloydsTSB73
+co.uk.getmondo
+com.starlingbank.android
+de.number26.android
+com.klarna.android
+com.coinbase.android
+com.binance.dev
+
+# ---- Messengers and calls ----------------------------------------------------------------------------
+org.telegram.messenger
+org.thoughtcrime.securesms
+com.viber.voip
+jp.naver.line.android
+com.tencent.mm
+com.tencent.mobileqq
+com.kakao.talk
+com.discord
+com.snapchat.android
+com.imo.android.imoim
+com.truecaller
+com.textra
+com.Slack
+us.zoom.videomeetings
+com.cisco.webex.meetings
+ch.protonmail.android
+com.yahoo.mobile.client.android.mail
+
+# ---- Social -------------------------------------------------------------------------------------------
+com.zhiliaoapp.musically
+com.zhiliaoapp.musically.go
+com.ss.android.ugc.trill
+com.twitter.android
+com.pinterest
+com.reddit.frontpage
+com.tumblr
+com.quora.android
+com.bereal.ft
+com.vkontakte.android
+com.tinder
+com.bumble.app
+co.hinge.app
+com.badoo.mobile
+com.grindrapp.android
+com.okcupid.okcupid
+com.shaadi.android
+in.mohalla.sharechat
+in.mohalla.video
+com.eterno
+com.eterno.shortvideos
+
+# ---- Browsers -----------------------------------------------------------------------------------------
+org.mozilla.firefox
+org.mozilla.firefox_beta
+org.mozilla.focus
+org.mozilla.fenix
+com.opera.browser
+com.opera.mini.native
+com.opera.gx
+com.brave.browser
+com.duckduckgo.mobile.android
+com.UCMobile.intl
+com.uc.browser.en
+com.kiwibrowser.browser
+com.vivaldi.browser
+org.torproject.torbrowser
+com.yandex.browser
+com.ecosia.android
+
+# ---- Video, music, books ----------------------------------------------------------------------------
+com.netflix.mediaclient
+com.amazon.avod.thirdpartyclient
+in.startv.hotstar
+com.disney.disneyplus
+com.hbo.hbonow
+com.wbd.stream
+com.hulu.plus
+com.spotify.music
+com.jio.media.jiobeats
+com.gaana
+com.bsbportal.music
+com.graymatrix.did
+com.tv.v18.viola
+com.jio.media.ondemand
+com.jio.jioplay.tv
+com.sonyliv
+tv.accedo.airtel.wynk
+com.mxtech.videoplayer.ad
+com.mxtech.videoplayer.pro
+org.videolan.vlc
+com.amazon.mp3
+com.apple.android.music
+com.soundcloud.android
+com.shazam.android
+deezer.android.app
+com.pandora.android
+tv.twitch.android.app
+com.plexapp.android
+com.crunchyroll.crunchyroid
+com.vimeo.android.videoapp
+com.dailymotion.dailymotion
+com.audible.application
+com.amazon.kindle
+com.radio.pocketfm
+wp.wattpad
+com.scribd.app.reader0
+com.audiomack
+flipboard.app
+com.cnn.mobile.android.phone
+bbc.mobile.news.ww
+com.nytimes.android
+com.guardian
+com.nis.app
+com.ht.news
+com.toi.reader.activities
+
+# ---- Shopping, food, travel ------------------------------------------------------------------------
+com.amazon.mShop.android.shopping
+in.amazon.mShop.android.shopping
+com.flipkart.android
+com.myntra.android
+com.meesho.supply
+com.ebay.mobile
+com.alibaba.aliexpresshd
+com.contextlogic.wish
+com.einnovation.temu
+com.zzkko
+com.walmart.android
+com.target.ui
+com.etsy.android
+com.shopify.arrive
+com.lazada.android
+com.ril.ajio
+com.jpl.jiomart
+com.bigbasket.mobileapp
+com.grofers.customerapp
+com.zeptoconsumerapp
+com.snapdeal.main
+com.fsn.nykaa
+com.tul.tatacliq
+com.lenskart.app
+in.swiggy.android
+com.application.zomato
+com.ubercab
+com.ubercab.eats
+com.olacabs.customer
+com.rapido.passenger
+com.makemytrip
+com.goibibo
+com.cleartrip.android
+com.ixigo
+cris.org.in.prs.ima
+in.redbus.android
+com.booking
+com.airbnb.android
+com.tripadvisor.tripadvisor
+com.expedia.bookings
+com.oyo.consumer
+com.agoda.mobile.consumer
+me.lyft.android
+com.dd.doordash
+com.grubhub.android
+com.instacart.client
+com.grabtaxi.passenger
+com.gojek.app
+ee.mtakso.client
+
+# ---- Government, telecom (India) -------------------------------------------------------------------
+in.gov.uidai.mAadhaarPlus
+com.digilocker.android
+in.gov.umang.negd.g2c
+nic.goi.aarogyasetu
+com.jio.myjio
+com.myairtelapp
+com.mventus.selfcare.activity
+
+# ---- Work, files, photos, security -------------------------------------------------------------------
+com.dropbox.android
+com.adobe.reader
+com.adobe.scan.android
+com.adobe.lrmobile
+com.adobe.psmobile
+com.intsig.camscanner
+com.evernote
+notion.id
+com.todoist
+com.trello
+com.canva.editor
+com.lemon.lvoverseas
+com.picsart.studio
+com.vsco.cam
+com.niksoftware.snapseed
+com.camerasideas.instashot
+com.nexstreaming.app.kinemasterfree
+com.lenovo.anyshare.gps
+com.estrongs.android.pop
+com.rarlab.rar
+com.ghisler.android.TotalCommander
+cn.wps.moffice_eng
+com.lastpass.lpandroid
+com.x8bit.bitwarden
+com.agilebits.onepassword
+com.authy.authy
+com.duosecurity.duomobile
+com.nordvpn.android
+com.expressvpn.vpn
+com.cloudflare.onedotonedotonedotone
+com.surfshark.vpnclient.android
+ch.protonvpn.android
+com.avast.android.mobilesecurity
+com.kms.free
+com.bitdefender.security
+com.symantec.mobilesecurity
+com.lookout
+org.malwarebytes.antimalware
+com.eset.ems2.gp
+com.wsandroid.suite
+com.waze
+org.zwanoo.android.speedtest
+
+# ---- Learning, health, home ----------------------------------------------------------------------
+com.duolingo
+com.byjus.thelearningapp
+com.unacademyapp
+xyz.penpencil.physicswala
+org.khanacademy.android
+org.coursera.android
+com.udemy.android
+com.microblink.photomath
+co.brainly
+com.amazon.dee.app
+com.ringapp
+com.philips.lighting.hue2
+com.tplink.iot
+com.fitbit.FitbitMobile
+com.garmin.android.apps.connectmobile
+com.strava
+com.myfitnesspal.android
+com.calm.android
+com.getsomeheadspace.android
+com.huami.watch.hmwatchmanager
+com.noisefit
+com.practo.fabric
+com.phonegap.rxpal
+com.aranoah.healthkart.plus
+
+# ---- Games ----------------------------------------------------------------------------------------
+com.tencent.ig
+com.pubg.imobile
+com.dts.freefireth
+com.dts.freefiremax
+com.supercell.clashofclans
+com.supercell.clashroyale
+com.supercell.brawlstars
+com.king.candycrushsaga
+com.king.candycrushsodasaga
+com.kiloo.subwaysurf
+com.imangi.templerun2
+com.mojang.minecraftpe
+com.roblox.client
+com.activision.callofduty.shooter
+com.ludo.king
+com.innersloth.spacemafia
+com.miniclip.eightballpool
+com.mobile.legends
+com.nianticlabs.pokemongo
+com.playrix.homescapes
+com.playrix.gardenscapes
+com.fingersoft.hillclimb
+com.ea.gp.fifamobile
+com.miHoYo.GenshinImpact
+com.halfbrick.fruitninjafree
+com.chess

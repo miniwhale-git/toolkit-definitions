@@ -55,9 +55,11 @@ Left out on purpose:
 Every build runs checks and publishes nothing if one fails, so the last good set stays online:
 
 - each source must give at least about half of what it gave when the checks were set, and may not have more than 5% unusable lines;
-- the set may not be more than 30% smaller than the one online, and its version must be higher;
-- a **keep-list** (`scripts/threat-sources/keep-hosts.txt`, over 600 hosts) of major global and Indian sites, banks, government and payment domains is removed from the host list, together with everything below them, so a poisoned or careless upstream list cannot make the app warn on `google.com` or `sbi.co.in`. Shared-hosting domains (`blogspot.com`, `github.io`, `web.app`, `pages.dev` and similar) are marked `shared`: the name itself is never listed, a page below it can be;
-- tables must be sorted with no repeated key, sizes must stay within the app's limits (host table 4 MB), every table must answer its canary entry (the app refuses a set that does not), and the manifest, hashes and signature must verify under the same rules the app reads them by.
+- the set may not be more than 30% smaller than the one online, its app entries may not grow by more than 25%, and its version must be higher; every certificate entry the online set did not have is printed in the build log;
+- a **host keep-list** (`scripts/threat-sources/keep-hosts.txt`, over 2,000 hosts) of major global and Indian sites, banks, government and payment domains is removed from the host list, together with everything below them, so a poisoned or careless upstream list cannot make the app warn on `google.com` or `sbi.co.in`. Shared hosting and user content (`blogspot.com`, `github.io`, `web.app`, `pages.dev`, paste sites, cloud storage such as `firebasestorage.googleapis.com`, form hosts, link shorteners) is marked `shared`: the name itself is never listed, a deeper name can be;
+- **app keep-lists**: `keep-packages.txt` (over 400 of the most installed apps, and everything under `android.`, `com.android.` and `com.google.android.` except stalkerware names that imitate them, which stay listed as "name used by stalkerware") and `keep-certs.txt` (the public AOSP test certificates, computed from the files in the Android source tree). An entry that hits them is dropped and printed; more than 3 new hits in one run stop the build, since that looks like a tampered source;
+- labels are built from the source's app name through a strict filter (letters, digits, space, dot, hyphen, underscore; at most 30 characters; no long number, no web address); anything else becomes "Stalkerware", "Monitoring app" or "Spyware";
+- tables must be sorted with no repeated key, keys are 8 bytes everywhere, sizes must stay within the app's limits (host table 6 MB; the build stops rather than cut it), every table must answer its canary entry (the app refuses a set that does not), and the manifest, hashes and signature must verify under the same rules the app reads them by. A `--date` in the future is refused.
 
 If the app warns about a site that is fine, write to support@attnom.com with the host name. It goes on the keep-list.
 
@@ -67,10 +69,12 @@ If the app warns about a site that is fine, write to support@attnom.com with the
 
 1. runs the tests;
 2. downloads the set that is online now and verifies it;
-3. builds a new set from the sources, compares it with the old one, signs it with the repository secret `TOOLKIT_DEFS_KEY`;
+3. builds a new set from the sources, compares it with the old one, signs it with the secret `TOOLKIT_DEFS_KEY` of the `publish` environment, which only the main branch may use;
 4. verifies the result and deploys `v1/` to GitHub Pages.
 
-Run by hand with **Actions > publish > Run workflow**. The option "allow_drop" accepts a set that is more than 30% smaller, for when a source really shrank.
+When a build fails, nothing is published, and the job "report" opens the issue "Daily lists failed" (or adds to it while it is open) with the failing gate. The keep-alive commit runs either way, so failing builds never let GitHub switch the schedule off.
+
+Run by hand with **Actions > publish > Run workflow**. The option "allow_drop" accepts a set that is more than 30% smaller, for when a source really shrank; "allow_growth" accepts app entries more than 25% up.
 
 The scripts in `scripts/` are a copy of the ones in the Toolkit repository. Change them there.
 

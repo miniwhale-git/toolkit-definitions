@@ -672,3 +672,1472 @@ un.org
 who.int
 worldbank.org
 imf.org
+
+# ---- Paste and code-sharing sites: people post anything there, so only deeper names may be listed ----
+pastebin.com shared
+paste.ee shared
+hastebin.com shared
+dpaste.org shared
+dpaste.com shared
+rentry.co shared
+rentry.org shared
+justpaste.it shared
+controlc.com shared
+pastes.io shared
+privatebin.net shared
+jsfiddle.net shared
+codepen.io shared
+cdpn.io shared
+jsbin.com shared
+ideone.com shared
+pastelink.net shared
+write.as shared
+termbin.com shared
+bpa.st shared
+paste.rs shared
+glot.io shared
+
+# ---- Cloud storage, object storage and file sharing ------------------------------------------------
+firebasestorage.googleapis.com shared
+storage.cloud.google.com shared
+firebaseio.com shared
+cloudfunctions.net shared
+run.app shared
+s3.us-east-1.amazonaws.com shared
+s3.us-east-2.amazonaws.com shared
+s3.us-west-1.amazonaws.com shared
+s3.us-west-2.amazonaws.com shared
+s3.eu-west-1.amazonaws.com shared
+s3.eu-west-2.amazonaws.com shared
+s3.eu-west-3.amazonaws.com shared
+s3.eu-central-1.amazonaws.com shared
+s3.eu-north-1.amazonaws.com shared
+s3.ap-south-1.amazonaws.com shared
+s3.ap-southeast-1.amazonaws.com shared
+s3.ap-southeast-2.amazonaws.com shared
+s3.ap-northeast-1.amazonaws.com shared
+s3.ap-northeast-2.amazonaws.com shared
+s3.ca-central-1.amazonaws.com shared
+s3.sa-east-1.amazonaws.com shared
+s3-us-west-2.amazonaws.com shared
+s3-eu-west-1.amazonaws.com shared
+elasticbeanstalk.com shared
+amplifyapp.com shared
+awsapprunner.com shared
+awsapps.com shared
+amazoncognito.com shared
+file.core.windows.net shared
+web.core.windows.net shared
+dfs.core.windows.net shared
+azure-api.net shared
+azurefd.net shared
+trafficmanager.net shared
+cloudapp.net shared
+digitaloceanspaces.com shared
+nyc3.digitaloceanspaces.com shared
+ams3.digitaloceanspaces.com shared
+sgp1.digitaloceanspaces.com shared
+fra1.digitaloceanspaces.com shared
+sfo3.digitaloceanspaces.com shared
+blr1.digitaloceanspaces.com shared
+ondigitalocean.app shared
+backblazeb2.com shared
+wasabisys.com shared
+s3.wasabisys.com shared
+linodeobjects.com shared
+r2.cloudflarestorage.com shared
+oraclecloud.com shared
+appdomain.cloud shared
+aliyuncs.com shared
+myqcloud.com shared
+dropboxusercontent.com shared
+dl.dropboxusercontent.com shared
+boxcloud.com shared
+1drv.ms
+1drv.com
+my.sharepoint.com shared
+icloud-content.com shared
+mega.nz
+mega.io
+mediafire.com
+4shared.com
+sendspace.com
+we.tl
+filemail.com
+gofile.io
+pixeldrain.com
+transfer.sh
+file.io
+catbox.moe shared
+files.catbox.moe shared
+pcloud.com
+pcloud.link shared
+sync.com
+tresorit.com
+idrive.com
+jumpshare.com
+imgur.com shared
+i.imgur.com shared
+imgbb.com shared
+ibb.co shared
+i.ibb.co shared
+postimg.cc shared
+i.postimg.cc shared
+postimages.org
+imageshack.com
+flickr.com
+staticflickr.com shared
+photobucket.com
+giphy.com
+tenor.com
+prnt.sc shared
+prntscr.com
+gyazo.com shared
+i.gyazo.com shared
+discordapp.net shared
+media.discordapp.net shared
+
+# ---- Hosting, app platforms and site builders: pages below these may be listed ----------------------
+gitbook.io shared
+readthedocs.io shared
+readthedocs.org
+rtfd.io shared
+heroku.com
+render.com
+railway.app shared
+up.railway.app shared
+deno.dev shared
+pythonanywhere.com shared
+tiiny.site shared
+tiiny.host
+neocities.org shared
+bitbucket.io shared
+sourceforge.net
+sourceforge.io shared
+wp.com shared
+weeblysite.com shared
+editmysite.com shared
+wixstudio.io shared
+editorx.io shared
+squarespace.com shared
+www.squarespace.com
+account.squarespace.com
+secureserver.net shared
+hostingersite.com shared
+hostinger.com
+hostinger.in
+framer.website shared
+framer.app shared
+framer.com
+webflow.com
+ucoz.net shared
+ucoz.ru shared
+narod.ru shared
+wpengine.com shared
+my.wpengine.com
+wpenginepowered.com shared
+kinsta.cloud shared
+ngrok.app shared
+ngrok-free.dev shared
+serveousercontent.com shared
+localtunnel.me shared
+pagekite.me shared
+devtunnels.ms shared
+gitpod.io shared
+github.dev shared
+app.github.dev shared
+githubpreview.dev shared
+csb.app shared
+replit.dev shared
+glitch.com
+streamlit.app shared
+hf.space shared
+huggingface.co
+gradio.live shared
+lovable.app shared
+business.site shared
+jimdo.com
+tilda.ws shared
+tilda.cc
+mailchi.mp shared
+mailchimpsites.com shared
+list-manage.com shared
+campaign-archive.com shared
+mcusercontent.com shared
+eepurl.com shared
+mcsv.net shared
+sendgrid.net shared
+sendgrid.com
+mandrillapp.com shared
+rs6.net shared
+constantcontact.com
+exacttarget.com shared
+hubspotpagebuilder.com shared
+hs-sites.com shared
+hubspotlinks.com shared
+hubspot.com
+force.com shared
+my.site.com shared
+atlassian.net shared
+zendesk.com shared
+www.zendesk.com
+support.zendesk.com
+freshdesk.com shared
+freshworks.com
+okta.com
+auth0.com
+onelogin.com
+service-now.com
+myworkdayjobs.com shared
+bamboohr.com shared
+monday.com
+app.link shared
+onelink.me shared
+page.link shared
+fandom.com shared
+itch.io shared
+bandcamp.com shared
+substack.com shared
+ghost.io shared
+beehiiv.com shared
+gumroad.com shared
+app.gumroad.com
+bsky.social shared
+workplace.com
+aptoide.com shared
+akamaized.net shared
+akamaihd.net shared
+edgekey.net shared
+edgesuite.net shared
+akamaiedge.net shared
+fastly.net shared
+cloudflare.net shared
+cdn77.org shared
+b-cdn.net shared
+stackpathcdn.com shared
+kxcdn.com shared
+imgix.net shared
+
+# ---- Document, form and survey hosts ---------------------------------------------------------------
+forms.gle shared
+typeform.com shared
+jotform.com shared
+formstack.com shared
+wufoo.com shared
+surveymonkey.com shared
+zohopublic.com shared
+zohopublic.in shared
+formsite.com shared
+cognitoforms.com shared
+paperform.co shared
+tally.so shared
+airtable.com
+smartsheet.com
+docsend.com
+canva.com
+coda.io
+prezi.com
+scribd.com
+slideshare.net
+issuu.com
+linktr.ee
+docusign.com
+docusign.net
+adobesign.com
+calendly.com
+eventbrite.com
+meetup.com
+miro.com
+figma.com
+asana.com
+trello.com
+
+# ---- Link shorteners and redirect services: the service name itself is never listed ---------------
+tiny.cc shared
+t.ly shared
+s.id shared
+shorturl.at shared
+rebrand.ly shared
+rebrandly.com
+bl.ink shared
+short.io
+v.gd shared
+clck.ru shared
+bitly.com
+bit.do shared
+db.tt shared
+wa.me shared
+m.me shared
+ig.me shared
+aka.ms shared
+apple.co shared
+amzn.eu shared
+a.co shared
+spoti.fi shared
+trib.al shared
+dlvr.it shared
+ift.tt shared
+hubs.ly shared
+hubs.la shared
+bbc.in shared
+nyti.ms shared
+wapo.st shared
+cnn.it shared
+reut.rs shared
+econ.st shared
+g.page shared
+goo.gle shared
+pin.it shared
+vk.cc shared
+qrco.de shared
+href.li shared
+urldefense.com shared
+cudasvc.com shared
+
+# ---- Google, Microsoft, Apple and Amazon: more of their own names ----------------------------------
+google.com.pk
+google.com.bd
+google.lk
+google.com.np
+google.ae
+google.com.sa
+google.com.eg
+google.co.za
+google.com.ng
+google.co.ke
+google.com.mx
+google.com.ar
+google.cl
+google.com.co
+google.com.pe
+google.es
+google.it
+google.nl
+google.be
+google.ch
+google.at
+google.pl
+google.se
+google.no
+google.dk
+google.fi
+google.pt
+google.gr
+google.ie
+google.cz
+google.hu
+google.ro
+google.com.tr
+google.ru
+google.com.ua
+google.co.kr
+google.com.tw
+google.com.hk
+google.com.sg
+google.com.my
+google.co.id
+google.co.th
+google.com.vn
+google.com.ph
+google.co.nz
+google.co.il
+google.org
+googleblog.com
+googleadservices.com
+ggpht.com
+gvt1.com
+gvt2.com
+1e100.net
+youtubekids.com
+recaptcha.net
+microsoft365.com
+onenote.com
+msauth.net
+msedge.net
+windowsupdate.com
+microsoftstore.com
+xboxlive.com
+minecraft.net
+mojang.com
+visualstudio.com
+office.net
+me.com
+mac.com
+itunes.com
+cdn-apple.com
+swift.org
+webkit.org
+amazon.nl
+amazon.se
+amazon.pl
+amazon.sg
+amazon.ae
+amazon.sa
+amazon.com.tr
+amazon.eg
+amazon.com.be
+media-amazon.com
+ssl-images-amazon.com
+images-amazon.com
+amazontrust.com
+aboutamazon.com
+audible.in
+imdb.com
+zappos.com
+wholefoodsmarket.com
+ring.com
+alexa.com
+kindle.com
+facebook.net
+oculus.com
+threads.com
+
+# ---- Search, portals, mail -------------------------------------------------------------------------
+yahoo.com
+yahoo.co.in
+yahoo.co.jp
+ymail.com
+aol.com
+ask.com
+duckduckgo.com
+baidu.com
+yandex.ru
+yandex.com
+ya.ru
+ecosia.org
+startpage.com
+brave.com
+qwant.com
+naver.com
+daum.net
+rediff.com
+rediffmail.com
+zoho.com
+zoho.in
+mail.com
+gmx.com
+gmx.de
+gmx.net
+web.de
+mail.ru
+proton.me
+protonmail.com
+tutanota.com
+tuta.com
+fastmail.com
+
+# ---- Social, messaging, calls ---------------------------------------------------------------------
+bsky.app
+mastodon.social
+vk.com
+ok.ru
+weibo.com
+qq.com
+wechat.com
+line.me
+kakao.com
+viber.com
+imo.im
+wire.com
+threema.ch
+element.io
+matrix.org
+telegram.me
+gotomeeting.com
+jitsi.org
+jit.si
+douyin.com
+bilibili.com
+youku.com
+iqiyi.com
+nicovideo.jp
+tiktokcdn.com
+pinimg.com
+redditstatic.com
+redditmedia.com
+sstatic.net
+gravatar.com
+xda-developers.com
+androidpolice.com
+androidauthority.com
+gsmarena.com
+91mobiles.com
+smartprix.com
+tinder.com
+bumble.com
+hinge.co
+match.com
+okcupid.com
+badoo.com
+grindr.com
+shaadi.com
+jeevansathi.com
+bharatmatrimony.com
+
+# ---- Video, music, books -------------------------------------------------------------------------
+hulu.com
+max.com
+hbomax.com
+peacocktv.com
+paramountplus.com
+crunchyroll.com
+plex.tv
+roku.com
+tubitv.com
+pluto.tv
+sling.com
+fubo.tv
+jiohotstar.com
+erosnow.com
+altbalaji.com
+hoichoi.tv
+sunnxt.com
+aha.video
+shemaroome.com
+airtelxstream.in
+tataplaybinge.com
+jiotv.com
+soundcloud.com
+deezer.com
+tidal.com
+pandora.com
+audiomack.com
+last.fm
+shazam.com
+genius.com
+musixmatch.com
+hungama.com
+resso.com
+getpocket.com
+instapaper.com
+feedly.com
+inoreader.com
+flipboard.com
+patreon.com
+ko-fi.com
+buymeacoffee.com
+kickstarter.com
+indiegogo.com
+gofundme.com
+change.org
+goodreads.com
+wattpad.com
+pocketfm.com
+kukufm.com
+storytel.com
+
+# ---- News and sport, worldwide -----------------------------------------------------------------------
+bbc.com
+bbc.co.uk
+cnn.com
+nytimes.com
+washingtonpost.com
+theguardian.com
+reuters.com
+apnews.com
+bloomberg.com
+wsj.com
+ft.com
+economist.com
+forbes.com
+cnbc.com
+foxnews.com
+nbcnews.com
+cbsnews.com
+go.com
+usatoday.com
+latimes.com
+npr.org
+aljazeera.com
+dw.com
+france24.com
+lemonde.fr
+spiegel.de
+bild.de
+elpais.com
+corriere.it
+theatlantic.com
+newyorker.com
+time.com
+newsweek.com
+huffpost.com
+buzzfeed.com
+vice.com
+vox.com
+axios.com
+politico.com
+theverge.com
+wired.com
+techcrunch.com
+arstechnica.com
+engadget.com
+cnet.com
+zdnet.com
+gizmodo.com
+mashable.com
+businessinsider.com
+insider.com
+scmp.com
+japantimes.co.jp
+smh.com.au
+abc.net.au
+cbc.ca
+independent.co.uk
+telegraph.co.uk
+dailymail.co.uk
+thesun.co.uk
+mirror.co.uk
+sky.com
+express.co.uk
+metro.co.uk
+standard.co.uk
+espn.com
+espn.in
+espncricinfo.com
+cricbuzz.com
+sportskeeda.com
+iplt20.com
+bcci.tv
+icc-cricket.com
+fifa.com
+uefa.com
+nba.com
+nfl.com
+mlb.com
+olympics.com
+premierleague.com
+goal.com
+skysports.com
+marca.com
+
+# ---- News, India -----------------------------------------------------------------------------------
+timesofindia.com
+economictimes.com
+livemint.com
+moneycontrol.com
+business-standard.com
+financialexpress.com
+thequint.com
+scroll.in
+thewire.in
+theprint.in
+firstpost.com
+deccanherald.com
+deccanchronicle.com
+tribuneindia.com
+telegraphindia.com
+outlookindia.com
+india.com
+abplive.com
+republicworld.com
+timesnownews.com
+wionews.com
+oneindia.com
+manoramaonline.com
+mathrubhumi.com
+eenadu.net
+sakshi.com
+lokmat.com
+loksatta.com
+divyabhaskar.co.in
+sandesh.com
+anandabazar.com
+dinamalar.com
+dailythanthi.com
+vikatan.com
+livehindustan.com
+patrika.com
+prabhatkhabar.com
+inshorts.com
+dailyhunt.in
+newsbytesapp.com
+
+# ---- Shopping, food and rides, worldwide --------------------------------------------------------------
+costco.com
+homedepot.com
+lowes.com
+ikea.com
+macys.com
+kohls.com
+wayfair.com
+chewy.com
+newegg.com
+temu.com
+shein.com
+wish.com
+zalando.com
+asos.com
+hm.com
+zara.com
+uniqlo.com
+nike.com
+adidas.com
+puma.com
+sephora.com
+ulta.com
+rakuten.com
+rakuten.co.jp
+mercadolibre.com
+mercadolivre.com.br
+lazada.com
+shopee.co.id
+shopee.sg
+shopee.com.my
+shopee.ph
+shopee.vn
+shopee.co.th
+shopee.tw
+tokopedia.com
+bukalapak.com
+jd.com
+taobao.com
+tmall.com
+overstock.com
+argos.co.uk
+tesco.com
+sainsburys.co.uk
+currys.co.uk
+johnlewis.com
+boots.com
+otto.de
+cdiscount.com
+fnac.com
+bol.com
+allegro.pl
+avito.ru
+ozon.ru
+wildberries.ru
+noon.com
+namshi.com
+takealot.com
+gumtree.com
+craigslist.org
+offerup.com
+poshmark.com
+mercari.com
+depop.com
+vinted.com
+stockx.com
+groupon.com
+instacart.com
+doordash.com
+grubhub.com
+ubereats.com
+deliveroo.co.uk
+just-eat.co.uk
+foodpanda.com
+grab.com
+gojek.com
+talabat.com
+careem.com
+lyft.com
+bolt.eu
+mcdonalds.com
+starbucks.com
+dominos.com
+dominos.co.in
+pizzahut.com
+pizzahut.co.in
+kfc.com
+subway.com
+burgerking.in
+bigcommerce.com
+woocommerce.com
+squareup.com
+
+# ---- Shopping, services and jobs, India --------------------------------------------------------------
+firstcry.com
+pepperfry.com
+urbanladder.com
+croma.com
+reliancedigital.in
+vijaysales.com
+decathlon.in
+bewakoof.com
+purplle.com
+mamaearth.in
+boat-lifestyle.com
+caratlane.com
+tanishq.co.in
+titan.co.in
+shoppersstop.com
+lifestylestores.com
+westside.com
+limeroad.com
+shopclues.com
+paytmmall.com
+indiamart.com
+tradeindia.com
+udaan.com
+dmart.in
+spencers.in
+licious.in
+freshtohome.com
+countrydelight.in
+cult.fit
+healthifyme.com
+apollo247.com
+apollohospitals.com
+medplusmart.com
+fortishealthcare.com
+maxhealthcare.in
+manipalhospitals.com
+narayanahealth.org
+coverfox.com
+bankbazaar.com
+paisabazaar.com
+cardekho.com
+carwale.com
+bikedekho.com
+bikewale.com
+cars24.com
+spinny.com
+99acres.com
+magicbricks.com
+housing.com
+nobroker.in
+makaan.com
+squareyards.com
+foundit.in
+monsterindia.com
+timesjobs.com
+internshala.com
+apna.co
+glassdoor.com
+glassdoor.co.in
+ambitionbox.com
+upwork.com
+fiverr.com
+freelancer.com
+freelancer.in
+toptal.com
+
+# ---- Travel ------------------------------------------------------------------------------------------
+airindia.com
+goindigo.in
+spicejet.com
+airindiaexpress.com
+akasaair.com
+oyorooms.com
+treebo.com
+fabhotels.com
+zostel.com
+ksrtc.in
+tnstc.in
+confirmtkt.com
+trainman.in
+delhimetrorail.com
+booking.com
+airbnb.com
+expedia.com
+tripadvisor.com
+kayak.com
+skyscanner.net
+skyscanner.com
+hotels.com
+agoda.com
+trivago.com
+priceline.com
+hostelworld.com
+vrbo.com
+trip.com
+emirates.com
+qatarairways.com
+etihad.com
+singaporeair.com
+lufthansa.com
+britishairways.com
+airfrance.com
+klm.com
+united.com
+delta.com
+aa.com
+southwest.com
+ryanair.com
+easyjet.com
+turkishairlines.com
+cathaypacific.com
+airasia.com
+flydubai.com
+qantas.com
+aircanada.com
+jetblue.com
+alaskaair.com
+aai.aero
+
+# ---- Money, India ------------------------------------------------------------------------------------
+sbimf.com
+sbigeneral.in
+sbisecurities.in
+hdfcfund.com
+hdfcergo.com
+icicilombard.com
+icicipruamc.com
+axismf.com
+nipponindiamf.com
+mutualfundssahihai.com
+camsonline.com
+kfintech.com
+mfcentral.com
+valueresearchonline.com
+tickertape.in
+screener.in
+paytmmoney.com
+indmoney.com
+dhan.co
+fyers.in
+kuvera.in
+etmoney.com
+scripbox.com
+jupiter.money
+fi.money
+sliceit.com
+navi.com
+kreditbee.in
+moneyview.in
+lendingkart.com
+tatacapital.com
+muthootfinance.com
+manappuram.com
+iiflfinance.com
+lichousing.com
+pnbhousing.com
+cityunionbank.com
+dhanbank.com
+nainitalbank.co.in
+saraswatbank.com
+cosmosbank.com
+svcbank.com
+tjsbbank.co.in
+easebuzz.in
+finopaymentsbank.in
+ippbonline.com
+jiopaymentsbank.com
+rupay.co.in
+utiitsl.com
+pfrda.org.in
+aicte-india.org
+
+# ---- Money worldwide ----------------------------------------------------------------------------------
+braintreegateway.com
+adyen.com
+klarna.com
+afterpay.com
+affirm.com
+plaid.com
+intuit.com
+xero.com
+freshbooks.com
+revolut.com
+monzo.com
+starlingbank.com
+n26.com
+cash.app
+zellepay.com
+dinersclub.com
+schwab.com
+fidelity.com
+vanguard.com
+robinhood.com
+etrade.com
+tdameritrade.com
+interactivebrokers.com
+hl.co.uk
+ally.com
+sofi.com
+chime.com
+nab.com.au
+commbank.com.au
+westpac.com.au
+anz.com
+rbc.com
+rbcroyalbank.com
+scotiabank.com
+bmo.com
+cibc.com
+ing.com
+abnamro.nl
+rabobank.nl
+commerzbank.de
+sparkasse.de
+postbank.de
+societegenerale.com
+credit-agricole.fr
+unicredit.it
+intesasanpaolo.com
+bbva.com
+caixabank.es
+nordea.com
+danskebank.com
+dbs.com.sg
+ocbc.com
+uob.com.sg
+maybank.com
+cimb.com
+bca.co.id
+bankmandiri.co.id
+kasikornbank.com
+scb.co.th
+emiratesnbd.com
+adcb.com
+alrajhibank.com.sa
+qnb.com
+standardbank.co.za
+absa.co.za
+fnb.co.za
+equitybank.co.ke
+kcbgroup.com
+gtbank.com
+zenithbank.com
+accessbankplc.com
+
+# ---- Governments, public bodies and universities -------------------------------------------------------
+state.gov
+va.gov
+medicare.gov
+healthcare.gov
+login.gov
+sam.gov
+ftc.gov
+ic3.gov
+cisa.gov
+nhs.uk
+gov.sg shared
+gov.za shared
+gov.pk shared
+gov.bd shared
+gov.lk shared
+gouv.fr shared
+bund.de
+gob.mx shared
+gob.es shared
+gov.br shared
+unicef.org
+unesco.org
+redcross.org
+icrc.org
+wto.org
+oecd.org
+nato.int
+interpol.int
+iitb.ac.in
+iitd.ac.in
+iitm.ac.in
+iitk.ac.in
+iitkgp.ac.in
+iitr.ac.in
+iitg.ac.in
+iith.ac.in
+iisc.ac.in
+du.ac.in
+jnu.ac.in
+bhu.ac.in
+amu.ac.in
+mu.ac.in
+unipune.ac.in
+annauniv.edu
+vit.ac.in
+manipal.edu
+bits-pilani.ac.in
+nitt.edu
+iimb.ac.in
+iima.ac.in
+iimcal.ac.in
+aiims.edu
+ignou.ac.in
+nptel.ac.in
+harvard.edu
+mit.edu
+stanford.edu
+berkeley.edu
+ox.ac.uk
+cam.ac.uk
+yale.edu
+princeton.edu
+columbia.edu
+cmu.edu
+
+# ---- Learning and reference ---------------------------------------------------------------------------
+coursera.org
+edx.org
+udemy.com
+khanacademy.org
+duolingo.com
+byjus.com
+unacademy.com
+vedantu.com
+pw.live
+toppr.com
+doubtnut.com
+chegg.com
+quizlet.com
+brainly.com
+brainly.in
+wikihow.com
+britannica.com
+dictionary.com
+merriam-webster.com
+cambridge.org
+oxfordlearnersdictionaries.com
+grammarly.com
+academia.edu
+researchgate.net
+springer.com
+nature.com
+sciencedirect.com
+elsevier.com
+wiley.com
+jstor.org
+arxiv.org
+ieee.org
+acm.org
+w3schools.com
+geeksforgeeks.org
+tutorialspoint.com
+javatpoint.com
+programiz.com
+leetcode.com
+hackerrank.com
+codechef.com
+codeforces.com
+freecodecamp.org
+wikidata.org
+wiktionary.org
+mediawiki.org
+wikivoyage.org
+wikisource.org
+gutenberg.org
+openstreetmap.org
+eff.org
+torproject.org
+letsencrypt.org
+gnu.org
+kernel.org
+debian.org
+ubuntu.com
+fedoraproject.org
+redhat.com
+archlinux.org
+opensuse.org
+linuxmint.com
+kde.org
+gnome.org
+videolan.org
+gimp.org
+blender.org
+libreoffice.org
+openoffice.org
+7-zip.org
+rarlab.com
+win-rar.com
+notepad-plus-plus.org
+
+# ---- Developers and cloud ----------------------------------------------------------------------------
+maven.org
+mvnrepository.com
+gradle.org
+jetbrains.com
+eclipse.org
+kubernetes.io
+golang.org
+go.dev
+rust-lang.org
+crates.io
+rubygems.org
+ruby-lang.org
+php.net
+perl.org
+java.com
+deno.com
+bun.sh
+typescriptlang.org
+reactjs.org
+react.dev
+vuejs.org
+angular.io
+angular.dev
+svelte.dev
+nextjs.org
+tailwindcss.com
+getbootstrap.com
+jquery.com
+cdnjs.com
+jsdelivr.net
+unpkg.com
+bootstrapcdn.com
+fontawesome.com
+typekit.net
+digitalocean.com
+linode.com
+members.linode.com shared
+vultr.com
+hetzner.com
+ovh.com
+ovhcloud.com
+godaddy.com
+namecheap.com
+bluehost.com
+hostgator.com
+siteground.com
+dreamhost.com
+cpanel.net
+plesk.com
+digicert.com
+sectigo.com
+globalsign.com
+alibabacloud.com
+tencentcloud.com
+bunny.net
+cloudinary.com
+hotjar.com
+mixpanel.com
+segment.com
+segment.io
+amplitude.com
+sentry.io
+newrelic.com
+datadoghq.com
+optimizely.com
+branch.io
+appsflyer.com
+adjust.com
+hcaptcha.com
+cloudflareinsights.com
+twilio.com
+mailgun.com
+postmarkapp.com
+mailchimp.com
+intercom.com
+workday.com
+greenhouse.io
+lever.co
+ringcentral.com
+servicenow.com
+tableau.com
+snowflake.com
+databricks.com
+mongodb.com
+elastic.co
+grafana.com
+hashicorp.com
+vmware.com
+broadcom.com
+citrix.com
+teamviewer.com
+anydesk.com
+logmein.com
+
+# ---- Security, privacy, passwords ---------------------------------------------------------------------
+sophos.com
+f-secure.com
+avg.com
+avira.com
+pandasecurity.com
+webroot.com
+crowdstrike.com
+paloaltonetworks.com
+fortinet.com
+cisco.com
+checkpoint.com
+zscaler.com
+proofpoint.com
+mimecast.com
+barracuda.com
+1password.com
+lastpass.com
+bitwarden.com
+dashlane.com
+keepersecurity.com
+nordvpn.com
+expressvpn.com
+protonvpn.com
+surfshark.com
+haveibeenpwned.com
+duosecurity.com
+pingidentity.com
+yubico.com
+authy.com
+
+# ---- Telecom and internet providers -------------------------------------------------------------------
+o2.co.uk
+ee.co.uk
+three.co.uk
+bt.com
+virginmedia.com
+orange.com
+orange.fr
+telekom.de
+telefonica.com
+movistar.es
+tim.it
+etisalat.ae
+du.ae
+stc.com.sa
+mtn.com
+safaricom.co.ke
+telstra.com.au
+optus.com.au
+rogers.com
+bell.ca
+telus.com
+comcast.com
+xfinity.com
+spectrum.com
+cox.com
+excitel.com
+tatasky.com
+sify.com
+
+# ---- Games -------------------------------------------------------------------------------------------
+steampowered.com
+steamcommunity.com
+epicgames.com
+unrealengine.com
+ea.com
+origin.com
+ubisoft.com
+blizzard.com
+battle.net
+activision.com
+callofduty.com
+playstation.com
+nintendo.com
+riotgames.com
+leagueoflegends.com
+playvalorant.com
+roblox.com
+rbxcdn.com
+supercell.com
+king.com
+garena.com
+pubgmobile.com
+battlegroundsmobileindia.com
+krafton.com
+mihoyo.com
+hoyoverse.com
+chess.com
+lichess.org
+gog.com
+humblebundle.com
+ign.com
+gamespot.com
+polygon.com
+kotaku.com
+pcgamer.com
+rockstargames.com
+2k.com
+bethesda.net
+ludoking.com
+unity.com
+unity3d.com
+
+# ---- Health, fitness, wellbeing ---------------------------------------------------------------------
+mayoclinic.org
+webmd.com
+healthline.com
+clevelandclinic.org
+medlineplus.gov
+drugs.com
+fitbit.com
+garmin.com
+strava.com
+myfitnesspal.com
+headspace.com
+calm.com
+zepp.com
+gonoise.com
+fire-boltt.com
+
+# ---- Phones, computers, cars, home ----------------------------------------------------------------------
+honor.com
+iqoo.com
+nothing.tech
+panasonic.com
+philips.com
+bose.com
+jbl.com
+harman.com
+canon.com
+nikon.com
+gopro.com
+dji.com
+logitech.com
+sandisk.com
+westerndigital.com
+seagate.com
+tp-link.com
+netgear.com
+d-link.com
+linksys.com
+tesla.com
+toyota.com
+ford.com
+honda.com
+hyundai.com
+kia.com
+bmw.com
+mercedes-benz.com
+volkswagen.com
+marutisuzuki.com
+mahindra.com
+heromotocorp.com
+bajajauto.com
+tvsmotor.com
+royalenfield.com
+olaelectric.com
+atherenergy.com
+philips-hue.com
+meethue.com
+smartthings.com
+
+# ---- App stores and software downloads --------------------------------------------------------------
+apkpure.com
+apkmirror.com
+uptodown.com
+f-droid.org
+softonic.com
+filehippo.com
+majorgeeks.com
+ninite.com
+chocolatey.org
+fosshub.com
+opera.com
+vivaldi.com
+waterfox.net
+mozilla.net
+mozilla.com
+thunderbird.net
+signal.me
+
+# ---- Photos, design, writing ---------------------------------------------------------------------------
+500px.com
+unsplash.com
+pexels.com
+pixabay.com
+shutterstock.com
+gettyimages.com
+istockphoto.com
+deviantart.com
+artstation.com
+behance.net
+dribbble.com
+here.com
+mapbox.com
+waze.com
+mapmyindia.com
+mappls.com
+truecaller.com
+picsart.com
+capcut.com
+vsco.co
+kinemaster.com
+camscanner.com
+evernote.com
+todoist.com
+notion.com
+wps.com
+ilovepdf.com
+smallpdf.com
+sejda.com
+pdf24.org
+adobe.io

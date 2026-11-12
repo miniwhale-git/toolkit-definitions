@@ -107,10 +107,10 @@ export const loadKeepList = (file = KEEP_FILE) => parseKeepList(readFileSync(fil
 /**
  * What the keep-list protects. A bad-host entry is refused when it is a kept host or a parent of
  * one (so a lookup that walks up from a kept host never hits), lies below a kept host that is not a
- * shared domain, or has the same 6-byte key as a protected name (a hash collision would warn on a
+ * shared domain, or has the same 8-byte key as a protected name (a hash collision would warn on a
  * major site just the same).
  */
-export function buildKeeper(keep, keyFor = (host) => keyOf(host, 6).toString("hex")) {
+export function buildKeeper(keep, keyFor = (host) => keyOf(host).toString("hex")) {
   const names = new Set();
   for (const host of keep.keys()) for (const name of hostWalk(host)) names.add(name);
   const keys = new Map([...names].map((name) => [keyFor(name), name]));

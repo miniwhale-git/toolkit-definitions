@@ -1,23 +1,25 @@
 // The .tkl table: writer, reader and binary search. The layout is the one in
 // app/src/main/java/com/attnom/folio/security/defs/DefsFormat.kt; change both together.
 //
-//   0  "TKL1"   4  keyBytes u8 (6 or 8)   5  valueBytes u8 (0 or 2)   6  reserved u16 = 0
+//   0  "TKL1"   4  keyBytes u8 (always 8)   5  valueBytes u8 (0 or 2)   6  reserved u16 = 0
 //   8  entryCount u32 BE   12  labelCount u32 BE   16  entries (key + value), ascending by key, no duplicates
 //   ..  labels: labelCount x (u8 length, UTF-8 bytes)
 //
-// A key is the first keyBytes bytes of SHA-256 over the UTF-8 text of the item.
+// A key is the first 8 bytes of SHA-256 over the UTF-8 text of the item. Shorter keys are refused:
+// at 6 bytes anyone could make a host name whose key equals a victim site's in about 2^48 hashes.
 
 import { createHash } from "node:crypto";
 
 export const MAGIC = "TKL1";
 export const HEADER_BYTES = 16;
+export const KEY_BYTES = 8;
 export const MAX_LABEL = 60;
 
 export const sha256 = (data) => createHash("sha256").update(data).digest();
 export const sha256Hex = (data) => sha256(data).toString("hex");
 
-/** First keyBytes bytes of SHA-256 over the UTF-8 bytes of text. */
-export function keyOf(text, keyBytes) {
+/** First keyBytes (8) bytes of SHA-256 over the UTF-8 bytes of text. */
+export function keyOf(text, keyBytes = KEY_BYTES) {
   return sha256(Buffer.from(text, "utf8")).subarray(0, keyBytes);
 }
 
@@ -45,13 +47,13 @@ export const cleanLabel = (text) => cleanText(text, MAX_LABEL);
 
 /**
  * Build a table.
- * @param {{ keyBytes: 6 | 8, labelled: boolean, entries: Array<{ text: string, label?: string }> }} spec
+ * @param {{ keyBytes?: 8, labelled: boolean, entries: Array<{ text: string, label?: string }> }} spec
  *   A labelled table needs a label on every entry; the other kind takes none. Entries whose key repeats are reduced to the first one given;
  *   the count of those is returned as `collisions` (the same text twice is not counted).
  * @returns {{ bytes: Buffer, entries: number, labels: string[], collisions: number }}
  */
-export function writeTable({ keyBytes, labelled, entries }) {
-  if (keyBytes !== 6 && keyBytes !== 8) throw new Error(`keyBytes must be 6 or 8, not ${keyBytes}`);
+export function writeTable({ keyBytes = KEY_BYTES, labelled, entries }) {
+  if (keyBytes !== KEY_BYTES) throw new Error(`keyBytes must be ${KEY_BYTES}, not ${keyBytes}`);
   const withLabels = labelled;
   const valueBytes = withLabels ? 2 : 0;
   const byKey = new Map();
@@ -111,7 +113,7 @@ export function openTable(bytes, name = "table") {
   if (bytes.toString("latin1", 0, 4) !== MAGIC) fail("does not start with TKL1");
   const keyBytes = bytes[4];
   const valueBytes = bytes[5];
-  if (keyBytes !== 6 && keyBytes !== 8) fail(`keyBytes is ${keyBytes}, expected 6 or 8`);
+  if (keyBytes !== KEY_BYTES) fail(`keyBytes is ${keyBytes}, expected ${KEY_BYTES}`);
   if (valueBytes !== 0 && valueBytes !== 2) fail(`valueBytes is ${valueBytes}, expected 0 or 2`);
   if (bytes.readUInt16BE(6) !== 0) fail("reserved field is not zero");
   const entryCount = bytes.readUInt32BE(8);

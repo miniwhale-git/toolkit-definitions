@@ -52,3 +52,5 @@ export const FRESHNESS = [
 export const MAX_REJECTED_SHARE = 0.05;
 /** A gate stops the build when a file shrinks by more than this against the previous set. */
 export const MAX_DROP = 0.3;
+/** A gate stops the build when the app entries together grow by more than this against the previous set. */
+export const MAX_GROWTH = 0.25;

@@ -6,22 +6,24 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync } from "node:crypto";
+import { X509Certificate, createHash, createPrivateKey, createPublicKey, generateKeyPairSync } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { PUBLISHED_BASE, buildSet, fetchPublished, loadVerifiedSet, lookupIn, parseCommandLine, siteCopies, writeSet } from "./threat-data.mjs";
-import { assemble, maxHostEntries } from "./threat-sources/assemble.mjs";
+import { OlderFormat, PUBLISHED_BASE, buildDate, buildSet, fetchPublished, loadVerifiedSet, lookupIn, parseCommandLine, siteCopies, writeSet } from "./threat-data.mjs";
+import { NO_KEEP_APPS, assemble, maxHostEntries, shortestHosts } from "./threat-sources/assemble.mjs";
 import { echapItems, parseEchapYaml, parseSamplesCsv } from "./threat-sources/echap.mjs";
 import { makeFetcher } from "./threat-sources/fetch.mjs";
-import { checkSet, hostListed, keepRescan, previousGates, readSet, sourceGates } from "./threat-sources/gates.mjs";
+import { appKeepGate, checkSet, hostBudgetGate, hostListed, keepRescan, newCertificateLines, previousGates, readSet, sourceGates } from "./threat-sources/gates.mjs";
 import { applyKeepList, buildKeeper, hostWalk, loadKeepList, normaliseHost, parseKeepList } from "./threat-sources/hosts.mjs";
-import { FILES, LIMITS, manifestBytes, parseManifest, versionFor } from "./threat-sources/manifest.mjs";
-import { campaignLabel, parseIndex, parseStix } from "./threat-sources/mvt.mjs";
-import { PUBLIC_KEY, privateKeyFromEnv, publicKeyFrom, signBytes, signatureValid } from "./threat-sources/sign.mjs";
+import { MAX_NEW_HITS, certRule, loadKeepApps, loadKeepCerts, loadKeepPackages, packageRule, parseKeepCerts, parseKeepPackages } from "./threat-sources/keep-apps.mjs";
+import { KINDS, NAME_MAX, labelAllowed, nameUsedLabel, safeName, threatLabel } from "./threat-sources/labels.mjs";
+import { FILES, LIMITS, datedAhead, manifestBytes, parseManifest, versionFor } from "./threat-sources/manifest.mjs";
+import { LABELS as MVT_LABELS, campaignLabel, parseIndex, parseStix } from "./threat-sources/mvt.mjs";
+import { PUBLIC_KEY, PUBLIC_KEYS, privateKeyFromEnv, publicKeyFrom, publicKeys, signBytes, signatureValid, signedByAny } from "./threat-sources/sign.mjs";
 import { SOURCE_ROWS, URLS } from "./threat-sources/sources.mjs";
 import { cleanLabel, keyOf, lookupText, openTable, sha256Hex, tableProblems, writeTable } from "./threat-sources/tkl.mjs";
 import { YamlError, parseYaml } from "./threat-sources/yaml.mjs";
@@ -74,16 +76,16 @@ const TINY = {
 };
 
 /** A signed set from table contents, each table with its canary unless `canaries` is false. `mutate(files)` can damage a file after the manifest was made. */
-function makeSet({ pkg = TINY.pkg, cert = TINY.cert, sha = TINY.sha, hosts = TINY.hosts, version = 2026010101, key = TEST_PRIVATE, canaries = true, mutate } = {}) {
+function makeSet({ pkg = TINY.pkg, cert = TINY.cert, sha = TINY.sha, hosts = TINY.hosts, version = 2026010101, builtAt = BUILT, key = TEST_PRIVATE, canaries = true, mutate } = {}) {
   const add = (kind, entries) => (canaries ? withCanary(kind, entries) : entries);
   const built = {
     "apps-pkg.tkl": writeTable({ keyBytes: 8, labelled: true, entries: add("pkg", pkg) }),
     "apps-cert.tkl": writeTable({ keyBytes: 8, labelled: true, entries: add("cert", cert) }),
     "apps-sha.tkl": writeTable({ keyBytes: 8, labelled: true, entries: add("sha", sha) }),
-    "hosts.tkl": writeTable({ keyBytes: 6, labelled: false, entries: add("hosts", hosts.map((text) => ({ text }))) }),
+    "hosts.tkl": writeTable({ labelled: false, entries: add("hosts", hosts.map((text) => ({ text }))) }),
   };
   const files = Object.entries(built).map(([name, t]) => ({ name, bytes: t.bytes, entries: t.entries }));
-  const bytes = manifestBytes({ version, built: BUILT, files, sources: [{ name: "Test fixture", licence: "CC0-1.0", url: "https://example.invalid/", entries: 8 }] });
+  const bytes = manifestBytes({ version, built: builtAt, files, sources: [{ name: "Test fixture", licence: "CC0-1.0", url: "https://example.invalid/", entries: 8 }] });
   const set = { manifestBytes: bytes, signature: key ? signBytes(bytes, key) : null, files: new Map(files.map((f) => [f.name, f.bytes])) };
   mutate?.(set);
   return set;
@@ -96,23 +98,30 @@ const failing = (results) => results.filter((r) => !r.ok).map((r) => r.gate);
 describe("table writer", () => {
   // Expected bytes made by an independent Python program following DefsFormat.kt (hashlib, struct).
   const PKG_HEX = "544b4c31080200000000000300000002" + "44ced7f23c9adff30000" + "b2e89757a55c387d0000" + "c6b8a3b8eb31bfc10001" + "13416c70686120287374616c6b657277617265291042657461202877617463687761726529";
-  const HOSTS_HEX = "544b4c3106000000" + "0000000300000000" + "970ca6b73eaf" + "9c180de0cd69" + "b4e22234a911";
+  const HOSTS_HEX = "544b4c3108000000" + "0000000300000000" + "970ca6b73eaf2630" + "9c180de0cd699ee7" + "b4e22234a9113e1b";
 
   test("matches hand-computed bytes", () => {
     eq(writeTable({ keyBytes: 8, labelled: true, entries: TINY.pkg }).bytes.toString("hex"), PKG_HEX);
-    eq(writeTable({ keyBytes: 6, labelled: false, entries: ["evil.example", "xn--bcher-kva.example", "bad.test"].map((text) => ({ text })) }).bytes.toString("hex"), HOSTS_HEX);
+    eq(writeTable({ labelled: false, entries: ["evil.example", "xn--bcher-kva.example", "bad.test"].map((text) => ({ text })) }).bytes.toString("hex"), HOSTS_HEX);
   });
 
-  test("keys are the first bytes of SHA-256 of the UTF-8 text", () => {
+  test("keys are the first 8 bytes of SHA-256 of the UTF-8 text, hosts included", () => {
     eq(keyOf("com.alpha.spy", 8).toString("hex"), "b2e89757a55c387d");
-    eq(keyOf("bad.test", 6).toString("hex"), "b4e22234a911");
-    eq(keyOf("xn--bcher-kva.example", 6).toString("hex"), "970ca6b73eaf");
+    eq(keyOf("bad.test").toString("hex"), "b4e22234a9113e1b");
+    eq(keyOf("xn--bcher-kva.example").toString("hex"), "970ca6b73eaf2630");
+  });
+
+  test("a table with 6-byte keys is neither written nor read", () => {
+    fails(() => writeTable({ keyBytes: 6, labelled: false, entries: [{ text: "a.b" }] }), /keyBytes must be 8/);
+    // Built by hand: the first format's host table, header then one 6-byte key.
+    const six = Buffer.concat([Buffer.from("TKL1", "latin1"), Buffer.from([6, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]), keyOf("bad.test").subarray(0, 6)]);
+    fails(() => openTable(six, "hosts.tkl"), /keyBytes is 6, expected 8/);
   });
 
   test("entries are ordered as unsigned bytes", () => {
     const texts = Array.from({ length: 300 }, (_, i) => `host${i}.example`);
-    const table = openTable(writeTable({ keyBytes: 6, labelled: false, entries: texts.map((text) => ({ text })) }).bytes, "t");
-    const keys = Array.from({ length: table.entryCount }, (_, i) => Buffer.from(table.bytes.subarray(16 + i * 6, 22 + i * 6)));
+    const table = openTable(writeTable({ labelled: false, entries: texts.map((text) => ({ text })) }).bytes, "t");
+    const keys = Array.from({ length: table.entryCount }, (_, i) => Buffer.from(table.bytes.subarray(16 + i * 8, 24 + i * 8)));
     eq(keys.every((k, i) => i === 0 || Buffer.compare(keys[i - 1], k) < 0), true);
     // A signed comparison would put keys starting 0x80 and up first; prove the data has both kinds.
     ok(keys.some((k) => k[0] >= 0x80) && keys.some((k) => k[0] < 0x80), "keys on both sides of 0x80");
@@ -145,9 +154,8 @@ describe("table writer", () => {
     fails(() => writeTable({ keyBytes: 8, labelled: true, entries: [{ text: "a.b" }] }), /labels on every entry/);
   });
 
-  test("two different texts with one key are reduced to one and counted", () => {
-    // Force a collision by making a 6-byte table from texts and checking the count path with the same text twice.
-    const t = writeTable({ keyBytes: 6, labelled: false, entries: [{ text: "same.test" }, { text: "same.test" }] });
+  test("the same text twice is one entry and not counted as a collision", () => {
+    const t = writeTable({ labelled: false, entries: [{ text: "same.test" }, { text: "same.test" }] });
     eq([t.entries, t.collisions], [1, 0]);
   });
 });
@@ -173,6 +181,7 @@ describe("table reader", () => {
     fails(() => openTable(Buffer.alloc(8), "t"), /header/);
     fails(() => openTable(mutated((b) => b.write("TKL2", 0, "latin1")), "t"), /TKL1/);
     fails(() => openTable(mutated((b) => (b[4] = 7)), "t"), /keyBytes/);
+    fails(() => openTable(mutated((b) => (b[4] = 6)), "t"), /keyBytes is 6, expected 8/);
     fails(() => openTable(mutated((b) => (b[5] = 1)), "t"), /valueBytes/);
     fails(() => openTable(mutated((b) => (b[7] = 1)), "t"), /reserved/);
     fails(() => openTable(mutated((b) => b.writeUInt32BE(1000, 8)), "t"), /do not fit/);
@@ -264,7 +273,7 @@ describe("host names", () => {
   });
 
   test("a lookup tries parent hosts and stops at two labels", () => {
-    const table = openTable(writeTable({ keyBytes: 6, labelled: false, entries: ["evil.net", "deep.sub.bad.org", "net", "9.9.9.9"].map((text) => ({ text })) }).bytes, "hosts");
+    const table = openTable(writeTable({ labelled: false, entries: ["evil.net", "deep.sub.bad.org", "net", "9.9.9.9"].map((text) => ({ text })) }).bytes, "hosts");
     eq(hostListed(table, "evil.net"), true);
     eq(hostListed(table, "a.b.evil.net"), true);
     eq(hostListed(table, "b.evil.net"), true);
@@ -284,10 +293,13 @@ describe("keep-list", () => {
   const keeper = buildKeeper(keep);
 
   test("the shipped list is large, valid and has the sites that must never be warned about", () => {
-    ok(keep.size >= 300, `only ${keep.size} entries`);
-    for (const host of ["google.com", "sbi.co.in", "hdfcbank.com", "paytm.com", "gov.in", "irctc.co.in", "microsoft.com", "amazon.in", "npci.org.in", "whatsapp.com"]) ok(keep.has(host), host);
-    for (const host of ["blogspot.com", "github.io", "web.app", "pages.dev"]) eq(keep.get(host), true, `${host} is shared`);
+    ok(keep.size >= 2000, `only ${keep.size} entries`);
+    for (const host of ["google.com", "sbi.co.in", "hdfcbank.com", "paytm.com", "gov.in", "irctc.co.in", "microsoft.com", "amazon.in", "npci.org.in", "whatsapp.com", "apkpure.com", "getpocket.com"]) ok(keep.has(host), host);
+    // User content and hosting: the name itself is never listed, a page below it may be.
+    for (const host of ["blogspot.com", "github.io", "web.app", "pages.dev", "vercel.app", "netlify.app", "wordpress.com", "pastebin.com", "paste.ee", "firebasestorage.googleapis.com", "forms.gle", "typeform.com", "s3.amazonaws.com", "tiny.cc"]) eq(keep.get(host), true, `${host} is shared`);
     eq(keep.get("google.com"), false);
+    for (const host of ["pastebin.com", "paste.ee", "firebasestorage.googleapis.com", "apkpure.com", "getpocket.com"]) ok(keeper.reason(host) !== null, `${host} cannot be listed`);
+    eq(keeper.reason("someone.firebasestorage.googleapis.com"), null, "a deeper name on shared storage may be listed");
   });
 
   test("the file parses strictly", () => {
@@ -324,6 +336,94 @@ describe("keep-list", () => {
     eq(kept, ["evil.net", "p.blogspot.com"]);
     eq(dropped.get("below google.com"), 2);
     eq(dropped.get("kept bit.ly"), 1);
+  });
+});
+
+describe("app keep-lists", () => {
+  const packages = loadKeepPackages();
+  const certs = loadKeepCerts();
+
+  test("the shipped package list protects the most installed apps and every system prefix", () => {
+    ok(packages.exact.size >= 400, `only ${packages.exact.size} packages`);
+    eq(packages.prefixes, ["android.", "com.android.", "com.google.android."]);
+    for (const name of ["com.whatsapp", "com.facebook.katana", "com.instagram.android", "com.phonepe.app", "net.one97.paytm", "in.org.npci.upiapp", "com.sbi.lotusintouch", "com.truecaller", "com.miui.securitycenter", "com.sec.android.app.launcher", "org.telegram.messenger", "android"]) ok(packageRule(name, packages)?.rule, name);
+    for (const name of ["com.android.vending", "com.android.chrome", "com.google.android.gms", "com.google.android.apps.nbu.paisa.user", "android.ext.services"]) eq(packageRule(name, packages)?.known, false, `${name} under a prefix`);
+    eq(packageRule("com.mxspy", packages), null);
+    eq(packageRule("com.microsoft.familysafety", packages), null, "a monitoring app the sources list on purpose stays listed");
+    eq(packageRule("com.android.core.mngi", packages), { listed: true }, "a stalkerware name that imitates a system one");
+  });
+
+  test("the AOSP test certificates are kept, and the digests are the real ones", () => {
+    // fixtures/aosp-certs holds the five .x509.pem files from build/make/target/product/security; recompute every digest.
+    const dir = path.join(FIX, "aosp-certs");
+    const names = ["testkey", "platform", "shared", "media", "networkstack"];
+    for (const name of names) {
+      const der = new X509Certificate(readFileSync(path.join(dir, `${name}.x509.pem`))).raw;
+      for (const algorithm of ["sha1", "sha256"]) {
+        const hex = createHash(algorithm).update(der).digest("hex");
+        ok(certs.has(hex), `${name} ${algorithm} ${hex} is in keep-certs.txt`);
+      }
+    }
+    eq(certs.size, names.length * 2, "nothing in keep-certs.txt that the fixtures cannot vouch for");
+    eq(createHash("sha1").update(new X509Certificate(readFileSync(path.join(dir, "testkey.x509.pem"))).raw).digest("hex"), "61ed377e85d386a8dfee6b864bd85b0bfaa5af81");
+    eq(certRule("61ed377e85d386a8dfee6b864bd85b0bfaa5af81", certs), { rule: "keep 61ed377e85d386a8dfee6b864bd85b0bfaa5af81", known: true });
+  });
+
+  test("the files parse strictly", () => {
+    fails(() => parseKeepPackages("com.a\ncom.a\n"), /twice/);
+    fails(() => parseKeepPackages("com.a extra\n"), /is not/);
+    fails(() => parseKeepPackages("com.a known more\n"), /is not/);
+    fails(() => parseKeepPackages("com.*.b\n"), /is not/);
+    fails(() => parseKeepPackages("com.x.y listed\n"), /under no protected prefix/);
+    eq(parseKeepPackages("a.*\na.b listed\nc.d known\n").exact.get("c.d"), { known: true });
+    fails(() => parseKeepCerts("ABCDEF\n"), /is not/);
+    fails(() => parseKeepCerts(`${"A".repeat(40)}\n`), /is not/);
+    fails(() => parseKeepCerts(`${"a".repeat(40)}\n${"a".repeat(40)}\n`), /twice/);
+    eq(parseKeepCerts(`${"a".repeat(64)} known\n`).get("a".repeat(64)), { known: true });
+  });
+});
+
+describe("labels", () => {
+  test("a name passes only the strict filter; anything else is the word for its kind", () => {
+    eq(threatLabel("mSpy", "stalkerware"), "mSpy (stalkerware)");
+    eq(threatLabel("Wise Mo_2.0-x", "watchware"), "Wise Mo_2.0-x (watchware)");
+    eq(threatLabel("1TopSpy", "stalkerware"), "1TopSpy (stalkerware)");
+    for (const [bad, why] of [
+      ["Call +1 555 0100 to remove", "plus sign"],
+      ["Call 5550100 now", "five digits in a row"],
+      ["12345", "digits only"],
+      ["x".repeat(31), "longer than 30"],
+      ["visit http-site", "http"],
+      ["www.remove-it.com", "www"],
+      ["help@remove.it", "@"],
+      ["Spy (pro)", "brackets"],
+      ["Spy‮ware", "direction override"],
+      ["Spуware", "a Cyrillic letter"],
+      ["", "empty"],
+      ["...", "no letter"],
+    ]) {
+      eq(safeName(bad), null, why);
+      eq(threatLabel(bad, "stalkerware"), "Stalkerware", why);
+    }
+    eq(threatLabel("Call +1 555", "watchware"), "Monitoring app");
+    eq(threatLabel("Call +1 555", "spyware"), "Spyware");
+    eq(campaignLabel("Call_+1_555_0100"), "Spyware");
+    eq(echapItems({ ioc: { apps: [{ name: "Call +1 555 0100", type: "stalkerware", packages: ["p.q"], sha1: [], sha256: [] }] }, watchware: { apps: [] }, samples: [] }).pkg[0].label, "Stalkerware");
+  });
+
+  test("what the app accepts unchanged: a plain name and a known kind", () => {
+    for (const good of ["mSpy (stalkerware)", "Stalkerware", "Monitoring app", "Toolkit list check", "Cellebrite (forensic tool)", "Snoopza (name used by stalkerware)", "Name used by spyware", ...Object.values(MVT_LABELS)]) ok(labelAllowed(good), good);
+    for (const bad of ["Call +1 555 (stalkerware)", "mSpy (malware)", "mSpy (stalkerware) ", "x".repeat(31), "a (stalkerware) (spyware)"]) eq(labelAllowed(bad), false, bad);
+    eq(nameUsedLabel("Snoopza (stalkerware)"), "Snoopza (name used by stalkerware)");
+    eq(nameUsedLabel("Morpheus (spyware)"), "Morpheus (name used by spyware)");
+    eq(nameUsedLabel("Stalkerware"), "Name used by stalkerware");
+    eq(labelAllowed(nameUsedLabel("x".repeat(30) + " (stalkerware)")), true);
+  });
+
+  test("the app's LabelText.shown applies the same rule (the source names the same kinds)", { skip: !existsSync(path.join(HERE, "..", "app/src/main/java/com/attnom/folio/security/defs/LabelText.kt")) && "LabelText.kt is not in this repository" }, () => {
+    const kt = readFileSync(path.join(HERE, "..", "app/src/main/java/com/attnom/folio/security/defs/LabelText.kt"), "utf8");
+    for (const [kind, generic] of Object.entries(KINDS)) ok(kt.includes(`"${kind}" to "${generic}"`), `LabelText.kt maps "${kind}" to "${generic}"`);
+    ok(kt.includes(`NAME_MAX = ${NAME_MAX}`), "the same length limit");
   });
 });
 
@@ -531,10 +631,30 @@ describe("signing", () => {
     fails(() => publicKeyFrom("AAAA"), /32 bytes/);
   });
 
-  test("the public key and the format constants match DefsFormat.kt", { skip: !existsSync(path.join(HERE, "..", "app/src/main/java/com/attnom/folio/security/defs/DefsFormat.kt")) && "DefsFormat.kt is not in this repository" }, () => {
+  test("a set signed by any listed key verifies; a key not on the list does not", () => {
+    const second = generateKeyPairSync("ed25519");
+    const third = generateKeyPairSync("ed25519");
+    const keys = [TEST_PUBLIC, second.publicKey];
+    eq(signedByAny(bytes, signBytes(bytes, TEST_PRIVATE), keys), 0);
+    eq(signedByAny(bytes, signBytes(bytes, second.privateKey), keys), 1, "the backup key");
+    eq(signedByAny(bytes, signBytes(bytes, third.privateKey), keys), -1, "a third key is refused");
+    const bySecond = makeSet({ key: second.privateKey });
+    eq(failing(checkSet(bySecond, options({ publicKey: keys }))), []);
+    ok(/public key 2 of 2/.test(checkSet(bySecond, options({ publicKey: keys })).find((r) => r.gate === "signature").detail));
+    eq(failing(checkSet(makeSet({ key: third.privateKey }), options({ publicKey: keys }))), ["signature"]);
+    eq(failing(checkSet(bySecond, options())), ["signature"], "one key given: only that key");
+    // The production list: two valid 32-byte keys, the daily one first.
+    eq(PUBLIC_KEYS.length, 2);
+    eq(PUBLIC_KEY, PUBLIC_KEYS[0]);
+    eq(publicKeys().length, 2);
+  });
+
+  test("the public keys and the format constants match DefsFormat.kt", { skip: !existsSync(path.join(HERE, "..", "app/src/main/java/com/attnom/folio/security/defs/DefsFormat.kt")) && "DefsFormat.kt is not in this repository" }, () => {
     const kt = readFileSync(path.join(HERE, "..", "app/src/main/java/com/attnom/folio/security/defs/DefsFormat.kt"), "utf8");
     const get = (re) => kt.match(re)?.[1];
-    eq(get(/const val PUBLIC_KEY = "([^"]+)"/), PUBLIC_KEY);
+    eq([...(get(/val PUBLIC_KEYS = listOf\(([^)]+)\)/) ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]), PUBLIC_KEYS);
+    eq(get(/const val KEY_BYTES = (\d+)/), "8");
+    eq(get(/const val MAX_AHEAD_MS = ([^\n]+)/), "2L * 24 * 60 * 60 * 1000");
     eq(get(/const val BASE_URL = "([^"]+)"/), PUBLISHED_BASE);
     eq(get(/const val MAGIC = "([^"]+)"/), "TKL1");
     eq(get(/const val HEADER_BYTES = (\d+)/), "16");
@@ -554,7 +674,13 @@ describe("gates", () => {
   test("a good set passes every check", () => {
     const results = checkSet(makeSet(), options());
     eq(failing(results), []);
-    eq(results.map((r) => r.gate), ["manifest", "signature", "files", "tables", "canaries", "sizes", "keep-list"]);
+    eq(results.map((r) => r.gate), ["manifest", "signature", "files", "tables", "labels", "canaries", "sizes", "keep-list"]);
+  });
+
+  test("a label that is not a plain name", () => {
+    const shouting = makeSet({ pkg: [{ text: "com.x.y", label: "Call +1 555 0100 to remove" }] });
+    eq(failing(checkSet(shouting, options())), ["labels"]);
+    ok(/Call \+1 555 0100/.test(checkSet(shouting, options()).find((r) => r.gate === "labels").detail));
   });
 
   test("a table without its canary", () => {
@@ -598,6 +724,57 @@ describe("gates", () => {
     eq(failing(previousGates(files(3), 1, null, { maxDrop: 0.3, allowDrop: false })), []);
   });
 
+  test("sudden growth of the app entries against the previous set", () => {
+    const prev = { version: 2026010101, built: "2026-01-01T00:00:00Z", files: [{ name: "apps-pkg.tkl", entries: 60 }, { name: "apps-cert.tkl", entries: 40 }, { name: "hosts.tkl", entries: 1000 }] };
+    const at = (pkg, hosts = 1000) => [{ name: "apps-pkg.tkl", entries: pkg }, { name: "apps-cert.tkl", entries: 40 }, { name: "hosts.tkl", entries: hosts }];
+    const opts = { maxDrop: 0.3, allowDrop: false, maxGrowth: 0.25, now: Date.parse("2026-01-02T00:00:00Z") };
+    eq(failing(previousGates(at(85), 2026010201, prev, opts)), [], "100 -> 125 is the limit");
+    const grew = previousGates(at(86), 2026010201, prev, opts);
+    eq(failing(grew), ["growth"]);
+    ok(/app entries 100 -> 126 \(26\.0%\); more than 25% up/.test(grew.find((r) => r.gate === "growth").detail));
+    eq(failing(previousGates(at(86), 2026010201, prev, { ...opts, allowGrowth: true })), [], "--allow-growth");
+    eq(failing(previousGates(at(60, 5000), 2026010201, prev, opts)), [], "hosts may grow: only app entries count");
+  });
+
+  test("a previous set dated ahead of the build does not set the floor", () => {
+    const ahead = { version: 2099010101, built: "2099-01-01T00:00:00Z", files: [{ name: "hosts.tkl", entries: 10 }] };
+    const now = Date.parse("2026-11-12T06:00:00Z");
+    const results = previousGates([{ name: "hosts.tkl", entries: 10 }], 2026111201, ahead, { maxDrop: 0.3, allowDrop: false, now });
+    eq(failing(results), []);
+    ok(/dated ahead of this build; phones refuse it/.test(results.find((r) => r.gate === "version").detail));
+    const twoDays = { version: 2026111401, built: "2026-11-14T05:00:00Z", files: [{ name: "hosts.tkl", entries: 10 }] };
+    eq(failing(previousGates([{ name: "hosts.tkl", entries: 10 }], 2026111201, twoDays, { maxDrop: 0.3, allowDrop: false, now })), ["version"], "within two days it is still the floor");
+    eq(datedAhead({ version: 2026111501, built: "2026-11-12T00:00:00Z" }, now), true, "by the version's day");
+    eq(datedAhead({ version: 2026111201, built: "2026-11-15T00:00:00Z" }, now), true, "by the built time");
+    eq(datedAhead({ version: 2026111401, built: "2026-11-14T05:00:00Z" }, now), false);
+  });
+
+  test("the app keep-lists: dropped and named, and too many new hits stop the build", () => {
+    const drop = (text, known = false, table = "pkg") => ({ table, text, label: "X (stalkerware)", source: "echap", rule: `keep ${text}`, known });
+    eq(failing([appKeepGate([])]), []);
+    eq(failing([appKeepGate([drop("61ed377e85d386a8dfee6b864bd85b0bfaa5af81", true, "cert"), drop("61ed377e85d386a8dfee6b864bd85b0bfaa5af81", true, "cert")])]), [], "a known hit, twice, is one and not new");
+    const three = appKeepGate([drop("com.whatsapp"), drop("com.a.b"), drop("com.c.d")]);
+    eq(failing([three]), [], `${MAX_NEW_HITS} new hits are dropped and printed`);
+    ok(/package com\.whatsapp \(X \(stalkerware\); from echap; keep com\.whatsapp, NEW\)/.test(three.detail), three.detail);
+    const four = appKeepGate([drop("com.whatsapp"), drop("com.a.b"), drop("com.c.d"), drop("com.e.f")]);
+    eq(failing([four]), ["app keep-lists"]);
+    ok(/4 new \(at most 3\): a source may have been tampered with/.test(four.detail), four.detail);
+  });
+
+  test("the host budget is never cut silently", () => {
+    eq(failing([hostBudgetGate({ cap: 10, wanted: 10, over: new Map() })]), []);
+    const over = hostBudgetGate({ cap: 10, wanted: 13, over: new Map([["phishing", 3]]) });
+    eq(failing([over]), ["host budget"]);
+    ok(/13 hosts for 10 places; over by 3 \(phishing 3\)/.test(over.detail), over.detail);
+  });
+
+  test("new certificate entries against the previous set are printed one by one", () => {
+    const previous = makeSet();
+    const lines = newCertificateLines([...TINY.cert, { text: "ab".repeat(20), label: "New (stalkerware)" }], previous);
+    eq(lines, ["certificates: 1 new against the previous set", `new certificate entry: ${"ab".repeat(20)} New (stalkerware)`]);
+    eq(newCertificateLines(TINY.cert, null), ["certificates: no previous set, 2 entries not compared"]);
+  });
+
   test("a keep-list host in the table", () => {
     const keep = new Map([["google.com", false], ["blogspot.com", true]]);
     eq(failing(checkSet(makeSet({ hosts: ["evil.example", "google.com"] }), options({ keep }))), ["keep-list"]);
@@ -624,10 +801,10 @@ describe("gates", () => {
       set.signature = signBytes(set.manifestBytes, TEST_PRIVATE);
     };
     // Damage can also hide a canary, so the canary gate may speak as well; the table gate must.
-    const dup = checkSet(makeSet({ mutate: flip((b) => b.copy(b, 22, 16, 22)) }), options());
+    const dup = checkSet(makeSet({ mutate: flip((b) => b.copy(b, 24, 16, 24)) }), options());
     ok(failing(dup).includes("tables") && failing(dup).every((g) => g === "tables" || g === "canaries"), failing(dup).join());
     ok(/same key/.test(dup.find((r) => r.gate === "tables").detail));
-    const unsorted = checkSet(makeSet({ mutate: flip((b) => { const first = Buffer.from(b.subarray(16, 22)); b.copy(b, 16, 22, 28); first.copy(b, 22); }) }), options());
+    const unsorted = checkSet(makeSet({ mutate: flip((b) => { const first = Buffer.from(b.subarray(16, 24)); b.copy(b, 16, 24, 32); first.copy(b, 24); }) }), options());
     ok(failing(unsorted).includes("tables") && failing(unsorted).every((g) => g === "tables" || g === "canaries"), failing(unsorted).join());
     ok(/sorts before/.test(unsorted.find((r) => r.gate === "tables").detail));
     const badLabel = (set) => { const b = Buffer.from(set.files.get("apps-sha.tkl")); b.writeUInt16BE(9, 16 + 8); set.files.set("apps-sha.tkl", b); const m = JSON.parse(set.manifestBytes.toString()); m.files.find((f) => f.name === "apps-sha.tkl").sha256 = sha256Hex(b); set.manifestBytes = Buffer.from(`${JSON.stringify(m, null, 2)}\n`); set.signature = signBytes(set.manifestBytes, TEST_PRIVATE); };
@@ -729,13 +906,22 @@ describe("gates", () => {
     } finally {
       Object.assign(LIMITS, before);
     }
-    eq([LIMITS.manifestBytes, LIMITS.totalBytes, LIMITS.hostsBytes], [64 * 1024, 12 * 1024 * 1024, 4 * 1024 * 1024]);
-    eq(maxHostEntries(), 699048);
+    eq([LIMITS.manifestBytes, LIMITS.totalBytes, LIMITS.hostsBytes], [64 * 1024, 12 * 1024 * 1024, 6 * 1024 * 1024]);
+    eq(maxHostEntries(), 786430, "8-byte keys in a 6 MB budget");
   });
 
   test("a table with the wrong shape for its name", () => {
-    const wrongShape = makeSet({ mutate: (s) => { const t = writeTable({ keyBytes: 8, labelled: false, entries: [{ text: "x.y" }] }); s.files.set("hosts.tkl", t.bytes); const m = JSON.parse(s.manifestBytes.toString()); const e = m.files.find((f) => f.name === "hosts.tkl"); e.sha256 = sha256Hex(t.bytes); e.bytes = t.bytes.length; e.entries = 1; s.manifestBytes = Buffer.from(`${JSON.stringify(m, null, 2)}\n`); s.signature = signBytes(s.manifestBytes, TEST_PRIVATE); } });
-    ok(/key\/value bytes 8\/0, expected 6\/0/.test(checkSet(wrongShape, options()).find((r) => r.gate === "files").detail));
+    const wrongShape = makeSet({ mutate: (s) => { const t = writeTable({ labelled: true, entries: [{ text: "x.y", label: "X" }] }); s.files.set("hosts.tkl", t.bytes); const m = JSON.parse(s.manifestBytes.toString()); const e = m.files.find((f) => f.name === "hosts.tkl"); e.sha256 = sha256Hex(t.bytes); e.bytes = t.bytes.length; e.entries = 1; s.manifestBytes = Buffer.from(`${JSON.stringify(m, null, 2)}\n`); s.signature = signBytes(s.manifestBytes, TEST_PRIVATE); } });
+    ok(/key\/value bytes 8\/2, expected 8\/0/.test(checkSet(wrongShape, options()).find((r) => r.gate === "files").detail));
+  });
+
+  test("a manifest whose host entries need 6-byte keys to fit is refused", () => {
+    // The first format's bundled set: 521547 hosts in 3129298 bytes. At 8 bytes a key they cannot fit.
+    const m = JSON.parse(makeSet().manifestBytes.toString());
+    const hosts = m.files.find((f) => f.name === "hosts.tkl");
+    hosts.entries = 521547;
+    hosts.bytes = 3129298;
+    fails(() => parseManifest(Buffer.from(JSON.stringify(m))), /hosts\.tkl: 521547 entries cannot fit in 3129298 bytes/);
   });
 });
 
@@ -915,7 +1101,10 @@ describe("build", () => {
   };
   const rows = SOURCE_ROWS.map((r) => ({ ...r, min: 1 }));
   const keep = loadKeepList();
-  const run = (extra = {}) => buildSet({ fetchText, keep, now: new Date("2026-03-04T05:06:07Z"), seq: 2, privateKey: TEST_PRIVATE, publicKey: TEST_PUBLIC, requireSignature: true, rows, maxRejected: 0.3, log: () => {}, ...extra });
+  const keepApps = loadKeepApps();
+  const run = (extra = {}) => buildSet({ fetchText, keep, keepApps, now: new Date("2026-03-04T05:06:07Z"), seq: 2, privateKey: TEST_PRIVATE, publicKey: TEST_PUBLIC, requireSignature: true, rows, maxRejected: 0.3, log: () => {}, ...extra });
+  /** The fixtures with one more Echap app added to ioc.yaml, as a tampered upstream commit would add it. */
+  const withEchapApp = (yaml) => async (url) => (url === URLS.echapIoc ? `${fixture("echap-ioc.yaml").trimEnd()}\n${yaml}` : fetchText(url));
 
   test("the strict share of unusable entries stops a source whose lines are mostly junk", async () => {
     const strict = await run({ maxRejected: 0.05 });
@@ -960,9 +1149,38 @@ describe("build", () => {
     eq(lookupIn(dir, "host", "x.westus.cloudapp.azure.com").found, null);
     eq(lookupIn(dir, "host", "accedss12-reflex44537.southcentralus.cloudapp.azure.com").found !== null, true);
     eq(lookupIn(dir, "host", "10.0.0.1").found, null);
+    eq(lookupIn(dir, "package", "com.android.inputmethod.latinmy").found, "KidsShield (name used by stalkerware)", "a stalkerware name under a system prefix stays, said carefully");
     eq(failing(checkSet(readSet(dir), options({ keep }))), []);
     eq(loadVerifiedSet(dir, TEST_PUBLIC).manifest.version, 2026030402);
     rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("a source that adds com.whatsapp: dropped, named, and the set does not have it", async () => {
+    const lines = [];
+    const built = await run({ fetchText: withEchapApp("- name: Added\n  type: stalkerware\n  packages:\n  - com.whatsapp\n  - com.added.spy\n"), log: (l) => lines.push(l) });
+    eq(failing(built.results), []);
+    const gate = built.results.find((r) => r.gate === "app keep-lists");
+    ok(/package com\.whatsapp \(Added \(stalkerware\); from echap; keep com\.whatsapp, NEW\)/.test(gate.detail), gate.detail);
+    const pkg = openTable(built.set.files.get("apps-pkg.tkl"), "apps-pkg.tkl");
+    eq(lookupText(pkg, "com.whatsapp"), null);
+    eq(lookupText(pkg, "com.added.spy"), "Added (stalkerware)", "the rest of the commit is used");
+  });
+
+  test("a source that adds the AOSP testkey, com.whatsapp and other protected names fails the build", async () => {
+    const tampered = withEchapApp(
+      "- name: Tampered\n  type: stalkerware\n  packages:\n  - com.whatsapp\n  - com.google.android.gms\n  - com.sec.android.app.launcher\n  certificates:\n" +
+        "  - 61ED377E85D386A8DFEE6B864BD85B0BFAA5AF81\n  - C8A2E9BCCF597C2FB6DC66BEE293FC13F2FC47EC77BC6B2B0D52C11F51192AB8\n",
+    );
+    const built = await run({ fetchText: tampered });
+    eq(failing(built.results), ["app keep-lists"]);
+    const detail = built.results.find((r) => r.gate === "app keep-lists").detail;
+    for (const named of ["com.whatsapp", "com.google.android.gms", "com.sec.android.app.launcher", "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8", "61ed377e85d386a8dfee6b864bd85b0bfaa5af81"]) ok(detail.includes(named), `${named} is named`);
+    ok(/4 new \(at most 3\)/.test(detail), detail);
+    const cert = openTable(built.set.files.get("apps-cert.tkl"), "apps-cert.tkl");
+    eq(lookupText(cert, "61ed377e85d386a8dfee6b864bd85b0bfaa5af81"), null, "the testkey never reaches the table");
+    // Without the keep-lists the same input would have listed all of them: the gate is what stops it.
+    const unprotected = await run({ fetchText: tampered, keepApps: NO_KEEP_APPS });
+    eq(lookupText(openTable(unprotected.set.files.get("apps-pkg.tkl"), "p"), "com.whatsapp"), "Tampered (stalkerware)");
   });
 
   test("the same inputs give the same bytes", async () => {
@@ -973,22 +1191,29 @@ describe("build", () => {
     eq([...a.set.files].every(([name, bytes]) => bytes.equals(b.set.files.get(name))), true);
   });
 
-  test("the host table is cut to the budget from the least trusted source", async () => {
-    const small = await run({ hostBudget: 16 + 6 * 12 });
-    const hosts = openTable(small.set.files.get("hosts.tkl"), "hosts");
-    eq(hosts.entryCount, 12);
-    eq(failing(small.results), []);
-    const again = await run({ hostBudget: 16 + 6 * 12 });
-    eq(again.set.files.get("hosts.tkl").equals(small.set.files.get("hosts.tkl")), true, "the same cut every time");
-    const mvtHost = parseStix(fixture("stix-predator.json"), "p").hosts[0];
-    eq(hostListed(hosts, normaliseHost(mvtHost)), true, "MVT hosts are first in line");
+  test("a host table over its budget stops the build with the counts; nothing is cut", async () => {
+    const full = await run();
+    const wanted = openTable(full.set.files.get("hosts.tkl"), "hosts").entryCount;
+    const exact = await run({ hostBudget: 16 + 8 * wanted });
+    eq(failing(exact.results), [], "a budget that fits exactly");
+    const small = await run({ hostBudget: 16 + 8 * 12 });
+    ok(failing(small.results).includes("host budget"), failing(small.results).join());
+    ok(/hosts for 11 places; over by/.test(small.results.find((r) => r.gate === "host budget").detail));
+    eq(openTable(small.set.files.get("hosts.tkl"), "hosts").entryCount, wanted, "every host is still in the table it refuses to write");
     const parts = [{ id: "mvt", pkg: [], cert: [], sha: [], hosts: ["a.example", "b.example"], rejected: 0, raw: 2, notes: [] }, { id: "phishing", pkg: [], cert: [], sha: [], hosts: ["c.example", "d.example", "e.example"], rejected: 0, raw: 3, notes: [] }];
-    const cut = assemble(parts, { keep: new Map(), hostBudget: 16 + 6 * 4 });
-    eq(cut.hosts.length, 3, "one of the four places is the canary's");
-    ok(cut.hosts.includes("a.example") && cut.hosts.includes("b.example"));
-    ok(/cut for the 3-entry budget/.test(cut.lines.find((l) => l.startsWith("hosts phishing"))) && cut.perSource.get("phishing").hosts === 1);
-    const hostsFile = cut.files.find((f) => f.name === "hosts.tkl");
-    eq([hostsFile.entries, hostsFile.bytes.length], [4, 16 + 6 * 4], "the table fills the budget exactly, canary included");
+    const over = assemble(parts, { keep: new Map(), hostBudget: 16 + 8 * 4 });
+    eq(over.budget.cap, 3, "one of the four places is the canary's");
+    eq([over.budget.wanted, [...over.budget.over]], [5, [["phishing", 2]]]);
+    eq(over.hosts.length, 5);
+    eq(failing([hostBudgetGate(over.budget)]), ["host budget"]);
+  });
+
+  test("the shortest listed names are printed for a person to look at", async () => {
+    const lines = [];
+    await run({ log: (l) => lines.push(l) });
+    const line = lines.find((l) => l.startsWith("the 50 listed hosts with the fewest labels: "));
+    ok(line, "printed");
+    eq(shortestHosts(["a.b.c", "x.y", "b.c", "1.2.3.4", "long.name"], 4), ["b.c", "x.y", "long.name", "a.b.c"], "fewest labels, then shortest");
   });
 
   test("a source that gives nothing stops the build", async () => {
@@ -1087,6 +1312,28 @@ describe("published set", () => {
     checks += 4;
     rmSync(out, { recursive: true, force: true });
   });
+
+  test("a set of ours in the first format (6-byte host keys) is reported as such, not as a previous set", async () => {
+    // What is online before this format: hosts.tkl with 6-byte keys, and a manifest whose counts only fit those.
+    const key6 = (text) => keyOf(text).subarray(0, 6);
+    const hostsText = [CANARY.host, ...TINY.hosts].sort((a, b) => Buffer.compare(key6(a), key6(b)));
+    const hosts6 = Buffer.concat([Buffer.from("TKL1", "latin1"), Buffer.from([6, 0, 0, 0]), Buffer.from([0, 0, 0, hostsText.length, 0, 0, 0, 0]), ...hostsText.map(key6)]);
+    const old = makeSet();
+    old.files.set("hosts.tkl", hosts6);
+    const m = JSON.parse(old.manifestBytes.toString());
+    Object.assign(m.files.find((f) => f.name === "hosts.tkl"), { sha256: sha256Hex(hosts6), bytes: hosts6.length, entries: hostsText.length });
+    old.manifestBytes = Buffer.from(`${JSON.stringify(m, null, 2)}\n`);
+    old.signature = signBytes(old.manifestBytes, TEST_PRIVATE);
+    const out = dir();
+    const answer = await fetchPublished({ base: BASE, dir: out, fetcher: serving(old), publicKey: [TEST_PUBLIC] });
+    ok(answer instanceof OlderFormat, String(answer));
+    ok(/6-byte keys/.test(answer.reason), answer.reason);
+    // Signed by someone else, the same files are an error, never an "older format".
+    old.signature = signBytes(old.manifestBytes, OTHER_PRIVATE);
+    await assert.rejects(fetchPublished({ base: BASE, dir: out, fetcher: serving(old), publicKey: TEST_PUBLIC }), /cannot fit/);
+    checks++;
+    rmSync(out, { recursive: true, force: true });
+  });
 });
 
 // ---- the command line, the version, the copies -------------------------------------------------------------------------------
@@ -1099,10 +1346,24 @@ describe("small things", () => {
     fails(() => versionFor(new Date(), 100), /1 to 99/);
   });
 
+  test("a build date may be today or earlier, never later", () => {
+    const now = new Date("2026-11-12T06:07:08Z");
+    eq(buildDate("20261112", now).toISOString(), "2026-11-12T06:07:08.000Z");
+    eq(buildDate("20261001", now).toISOString(), "2026-10-01T06:07:08.000Z");
+    fails(() => buildDate("20261113", now), /in the future/);
+    fails(() => buildDate("20991231", now), /in the future/);
+    fails(() => buildDate("20260230", now), /not a real day/);
+    fails(() => buildDate("2026-11-12", now), /yyyymmdd/);
+    const run = spawnSync(process.execPath, [path.join(HERE, "threat-data.mjs"), "build", "--out", path.join(tmpdir(), "never-written"), "--date", "20991231"], { encoding: "utf8" });
+    eq(run.status, 1);
+    ok(/in the future/.test(run.stderr), run.stderr);
+  });
+
   test("arguments", () => {
     eq(parseCommandLine(["build", "--out", "d", "--seq", "auto", "--allow-drop"]).flags.out, "d");
     eq(parseCommandLine(["build", "--out", "d"]).flags.seq, "01");
     eq(parseCommandLine(["build", "--out", "d", "--allow-drop"]).flags["allow-drop"], true);
+    eq(parseCommandLine(["build", "--out", "d", "--allow-growth"]).flags["allow-growth"], true);
     eq(parseCommandLine(["lookup", "d", "host", "a.b"]).args, ["d", "host", "a.b"]);
     fails(() => parseCommandLine(["build", "--nope"]), /nope/);
   });
@@ -1115,7 +1376,7 @@ describe("small things", () => {
   });
 
   test("the set bundled in the app verifies against the real public key", { skip: !existsSync(path.join(HERE, "..", "app/src/main/assets/threat/manifest.json")) && "no bundled set in this repository" }, () => {
-    const results = checkSet(readSet(path.join(HERE, "..", "app/src/main/assets/threat")), { publicKey: publicKeyFrom(PUBLIC_KEY), keep: loadKeepList(), requireSignature: true });
+    const results = checkSet(readSet(path.join(HERE, "..", "app/src/main/assets/threat")), { publicKey: publicKeys(), keep: loadKeepList(), requireSignature: true });
     eq(failing(results), []);
   });
 

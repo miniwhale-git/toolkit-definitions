@@ -1,0 +1,31 @@
+# Signing certificates the app list must never contain, however the sources look.
+# One per line: the lower-case hex SHA-1 (40) or SHA-256 (64) of the certificate's DER bytes.
+# "known" marks an entry a source is known to list: dropping it is expected and not counted as new.
+# The build fails when one run drops more than 3 entries that are not marked known.
+#
+# ---- AOSP test certificates ---------------------------------------------------------------------
+# Public keys from the Android source tree, build/make/target/product/security/*.x509.pem, fetched on
+# 2026-11-12 from android.googlesource.com/platform/build (refs/heads/main, ?format=TEXT). Copies are
+# in fixtures/aosp-certs/ and a test recomputes every value below from them. Custom ROMs and many
+# cheap phones sign system apps with these keys, and stalkerware makers often sign with the testkey,
+# so a hit on one of them says nothing about the app.
+
+# testkey: Echap lists its SHA-1 under AllTracker, Cerberus, MonitorUltra and others.
+61ed377e85d386a8dfee6b864bd85b0bfaa5af81 known
+a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc
+# platform
+27196e386b875e76adf700e7ea84e4c6eee33dfa
+c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8
+# shared
+5b368cff2da2686996bc95eac190eaa4f5630fe5
+28bbfe4a7b97e74681dc55c2fbb6ccb8d6c74963733f6af6ae74d8c3a6e879fd
+# media
+b79df4a82e90b57ea76525ab7037ab238a42f5d3
+465983f7791f2abeb43ea2cbdc7f21a8260b72bc08a55c839fc1a43bc741a81e
+# networkstack
+7c8bdabd21f953a1b18ccbe7b91393d9fdf94830
+e1dbadce60dc080d15b58a014b0dcf9400e24de23fa00b287a5a982bfebda2ee
+
+# ---- The most installed apps -------------------------------------------------------------------
+# Their signing certificates are not added here: no source that could be cited publishes them as
+# certificate files to compute from. Those apps are protected by package name in keep-packages.txt.

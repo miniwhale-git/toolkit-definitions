@@ -7,6 +7,7 @@
 // file:hashes.sha256 (APK hashes) and domain-name:value (hosts). IP addresses, file paths, process
 // names and the rest do not fit our tables. Labels name the campaign: "Predator (spyware)".
 
+import { threatLabel } from "./labels.mjs";
 import { parseYaml } from "./yaml.mjs";
 
 /** Repositories whose licence was read: id of the source row they count under, and the licence. */
@@ -58,8 +59,8 @@ export function parseIndex(text, label = "indicators.yaml") {
   return { files, skipped };
 }
 
-/** Full labels for names whose plain form reads badly. Anything else becomes "<name> (spyware)". */
-const LABELS = {
+/** Full labels for names whose plain form reads badly. Each passes the label filter (a test checks). */
+export const LABELS = {
   RCSLab: "RCS Lab (spyware)",
   OperationTriangulation: "Operation Triangulation (spyware)",
   WyrmSpy_DragonEgg: "WyrmSpy and DragonEgg (spyware)",
@@ -67,7 +68,8 @@ const LABELS = {
   Cellebrite: "Cellebrite (forensic tool)",
 };
 
-export const campaignLabel = (malwareName) => LABELS[malwareName] ?? `${malwareName.replace(/_/g, " ")} (spyware)`;
+/** "<name> (spyware)", or "Spyware" when the name does not pass the label filter (labels.mjs). */
+export const campaignLabel = (malwareName) => LABELS[malwareName] ?? threatLabel(String(malwareName).replace(/_/g, " "), "spyware");
 
 const PATTERN = /^\[([a-z0-9-]+):([A-Za-z0-9._-]+)\s*=\s*'([^'\\]*)'\]$/;
 const WANTED = { "app:id": "pkg", "app:cert.sha256": "cert", "app:cert.sha1": "cert", "file:hashes.sha256": "sha", "domain-name:value": "host" };

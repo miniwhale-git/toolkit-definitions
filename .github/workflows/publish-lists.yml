@@ -1,11 +1,13 @@
 # Builds the threat lists every day and publishes them with GitHub Pages at /v1/.
 #
-# A gate failure (a source empty or changed shape, a big drop against the set now online, a
-# bad signature, a keep-list host in the table) fails the build step. Then nothing is deployed
-# and the last good set stays online.
+# A gate failure (a source empty or changed shape, a big drop or sudden growth against the set now online,
+# too many keep-list hits, a host table over its budget, a bad signature) fails the build job. Then nothing
+# is deployed, the last good set stays online, and the "report" job opens or updates the issue
+# "Daily lists failed" with the failing gate's output.
 #
-# Needs: Settings > Pages > Source "GitHub Actions", and the repository secret TOOLKIT_DEFS_KEY
-# (the Ed25519 private key, PEM text).
+# Needs: Settings > Pages > Source "GitHub Actions"; an environment named "publish" that only the main branch
+# may use, holding the secret TOOLKIT_DEFS_KEY (the Ed25519 private key, PEM text). Only the build job runs
+# in that environment, so a workflow pushed to any other branch cannot read the key.
 
 name: publish
 
@@ -18,42 +20,61 @@ on:
         description: "Accept a set that is more than 30% smaller than the one online (a source really shrank)"
         type: boolean
         default: false
+      allow_growth:
+        description: "Accept app entries more than 25% above the set online (a source really grew)"
+        type: boolean
+        default: false
 
-permissions:
-  contents: read
+# Nothing by default; each job asks for what it needs.
+permissions: {}
 
 concurrency:
   group: publish
   cancel-in-progress: false
 
+defaults:
+  run:
+    # bash -eo pipefail, so a failure inside "| tee" still fails the step.
+    shell: bash
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: publish
+    permissions:
+      contents: read
+    outputs:
+      failure: ${{ steps.why.outputs.text }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"
 
       - name: Tests
-        run: node --test scripts/threat-data.test.mjs
+        run: node --test scripts/threat-data.test.mjs 2>&1 | tee -a run.log
 
       - name: Download the set that is online now
         id: previous
         run: |
           set +e
-          node scripts/threat-data.mjs fetch-published --out previous
-          code=$?
+          node scripts/threat-data.mjs fetch-published --out previous 2>&1 | tee -a run.log
+          code=${PIPESTATUS[0]}
           set -e
           if [ "$code" = 0 ]; then
             echo "args=--previous previous" >> "$GITHUB_OUTPUT"
           elif [ "$code" = 3 ]; then
-            echo "Nothing is published yet; this is the first set."
+            echo "Nothing is published yet; this is the first set." | tee -a run.log
+            echo "args=" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = 4 ]; then
+            echo "::warning::The set online is ours but in the first format (6-byte host keys), which phones refuse. Building without a previous set this once." | tee -a run.log
             echo "args=" >> "$GITHUB_OUTPUT"
           else
-            echo "Could not read the published set (exit $code); not publishing."
+            echo "Could not read the published set (exit $code); not publishing." | tee -a run.log
             exit "$code"
           fi
 
@@ -63,11 +84,12 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           PREVIOUS_ARGS: ${{ steps.previous.outputs.args }}
           ALLOW_DROP: ${{ inputs.allow_drop && '--allow-drop' || '' }}
+          ALLOW_GROWTH: ${{ inputs.allow_growth && '--allow-growth' || '' }}
         # The secret is only in this step's environment. The script never prints it.
-        run: node scripts/threat-data.mjs build --out site/v1 --seq auto --require-signature $PREVIOUS_ARGS $ALLOW_DROP
+        run: node scripts/threat-data.mjs build --out site/v1 --seq auto --require-signature $PREVIOUS_ARGS $ALLOW_DROP $ALLOW_GROWTH 2>&1 | tee -a run.log
 
       - name: Verify what was built
-        run: node scripts/threat-data.mjs verify site/v1
+        run: node scripts/threat-data.mjs verify site/v1 2>&1 | tee -a run.log
 
       - name: Add the page and the notices
         run: |
@@ -78,6 +100,23 @@ jobs:
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site
+
+      # On failure: the failing gates and the last lines, for the issue. Never the key: the script does not print it.
+      - name: Keep what failed
+        id: why
+        if: failure()
+        run: |
+          {
+            echo "text<<END_OF_REPORT"
+            echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo "Failing gates:"
+            grep -E '^FAIL ' run.log | cut -c1-1500 | head -20 || true
+            echo
+            echo "Last lines:"
+            tail -n 40 run.log 2>/dev/null | cut -c1-500 || echo "(no output was kept)"
+            echo "END_OF_REPORT"
+          } >> "$GITHUB_OUTPUT"
 
   deploy:
     needs: build
@@ -92,10 +131,33 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
+  # A failed build opens one issue, or adds to it while it is open, so weeks of failing gates are seen.
+  report:
+    needs: build
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update "Daily lists failed"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT: ${{ needs.build.outputs.failure }}
+        run: |
+          title="Daily lists failed"
+          body=$(printf '%s\n\n```\n%s\n```\n' "The daily build failed on $(date -u +%Y-%m-%d). Nothing was published; the last good set stays online." "${REPORT:-The build failed before any gate ran; see the run log.}")
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n 1)
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi
+
   # GitHub switches scheduled workflows off after 60 days without a commit. This keeps the schedule alive
-  # with an empty commit when the last one is older than 45 days.
+  # with an empty commit when the last one is older than 45 days, also when the build failed.
   keepalive:
     needs: deploy
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -4,10 +4,11 @@
  * Toolkit's threat lists: build, check and query the signed set the app reads.
  * The file format is described in app/src/main/java/com/attnom/folio/security/defs/DefsFormat.kt.
  *
- *   node scripts/threat-data.mjs build --out DIR [--seq 01|auto] [--previous DIR] [--allow-drop]
+ *   node scripts/threat-data.mjs build --out DIR [--seq 01|auto] [--previous DIR] [--allow-drop] [--allow-growth]
  *                                      [--require-signature] [--date yyyymmdd]
  *   node scripts/threat-data.mjs verify DIR
- *   node scripts/threat-data.mjs fetch-published --out DIR [--base URL]   (exit 3: nothing is published yet)
+ *   node scripts/threat-data.mjs fetch-published --out DIR [--base URL]
+ *        (exit 3: nothing is published yet; exit 4: what is published is signed by us but in an older format)
  *   node scripts/threat-data.mjs lookup DIR package|cert|sha|host VALUE      (exit 1 when not found)
  *   node scripts/threat-data.mjs sync-site [--check]    (copy this script into definitions-site/)
  *
@@ -21,14 +22,15 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync,
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs as nodeParseArgs } from "node:util";
-import { assemble } from "./threat-sources/assemble.mjs";
+import { NO_KEEP_APPS, assemble, shortestHosts } from "./threat-sources/assemble.mjs";
 import { collectAll, freshnessWarnings } from "./threat-sources/collect.mjs";
 import { makeFetcher } from "./threat-sources/fetch.mjs";
-import { checkSet, keepRescan, previousGates, readSet, sourceGates } from "./threat-sources/gates.mjs";
+import { appKeepGate, checkSet, hostBudgetGate, keepRescan, newCertificateLines, previousGates, readSet, sourceGates } from "./threat-sources/gates.mjs";
 import { buildKeeper, hostWalk, loadKeepList, normaliseHost } from "./threat-sources/hosts.mjs";
+import { loadKeepApps } from "./threat-sources/keep-apps.mjs";
 import { FILES, LIMITS, MANIFEST, SIGNATURE, manifestBytes, parseManifest, versionFor } from "./threat-sources/manifest.mjs";
-import { PUBLIC_KEY, privateKeyFromEnv, publicKeyFrom, signBytes } from "./threat-sources/sign.mjs";
-import { MAX_DROP, MAX_REJECTED_SHARE, SOURCE_ROWS } from "./threat-sources/sources.mjs";
+import { privateKeyFromEnv, publicKeys as productionKeys, signBytes, signedByAny } from "./threat-sources/sign.mjs";
+import { MAX_DROP, MAX_GROWTH, MAX_REJECTED_SHARE, SOURCE_ROWS } from "./threat-sources/sources.mjs";
 import { lookupText, openTable } from "./threat-sources/tkl.mjs";
 
 const HERE = import.meta.dirname;
@@ -51,13 +53,15 @@ export function loadVerifiedSet(dir, publicKey) {
 
 /**
  * Build a set in memory and run every gate. Nothing touches the disk.
- * @returns {Promise<{ set: object, manifest: object, results: object[], ok: boolean, lines: string[] }>}
+ * @returns {Promise<{ set: object, manifest: object, results: object[], ok: boolean, lines: string[], hosts: string[] }>}
  */
-export async function buildSet({ fetchText, keep, now = new Date(), seq = 1, previous = null, privateKey = null, publicKey, allowDrop = false, requireSignature = false, rows = SOURCE_ROWS, maxRejected = MAX_REJECTED_SHARE, hostBudget, log = console.log }) {
+export async function buildSet({ fetchText, keep, keepApps = NO_KEEP_APPS, now = new Date(), seq = 1, previous = null, privateKey = null, publicKey, allowDrop = false, allowGrowth = false, requireSignature = false, rows = SOURCE_ROWS, maxRejected = MAX_REJECTED_SHARE, hostBudget, log = console.log }) {
   const parts = await collectAll(fetchText, { log });
   for (const part of parts) for (const note of part.notes) log(`${part.id}: ${note}`);
-  const built = assemble(parts, { keep, hostBudget });
+  const built = assemble(parts, { keep, keepApps, hostBudget });
   built.lines.forEach((l) => log(l));
+  newCertificateLines(built.certs, previous?.set ?? null).forEach((l) => log(l));
+  log(`the 50 listed hosts with the fewest labels: ${shortestHosts(built.hosts).join(" ")}`);
   const sources = rows.map((row) => {
     const s = built.perSource.get(row.id);
     return { name: row.name, licence: row.licence, url: row.url, entries: s ? s.pkg + s.cert + s.sha + s.hosts : 0 };
@@ -70,11 +74,22 @@ export async function buildSet({ fetchText, keep, now = new Date(), seq = 1, pre
 
   const results = [
     ...sourceGates(built.perSource, rows, maxRejected),
-    ...previousGates(built.files, version, previous?.manifest ?? null, { maxDrop: MAX_DROP, allowDrop }),
+    ...previousGates(built.files, version, previous?.manifest ?? null, { maxDrop: MAX_DROP, allowDrop, maxGrowth: MAX_GROWTH, allowGrowth, now: now.getTime() }),
+    appKeepGate(built.appDrops),
+    hostBudgetGate(built.budget),
     keepRescan(built.hosts, buildKeeper(keep)),
     ...checkSet(set, { publicKey, keep, requireSignature }),
   ];
-  return { set, manifest, results, ok: results.every((r) => r.ok), lines: built.lines };
+  return { set, manifest, results, ok: results.every((r) => r.ok), lines: built.lines, hosts: built.hosts };
+}
+
+/** The --date value as a time today or earlier (UTC), keeping the time of day of `now`. A later day is refused. */
+export function buildDate(text, now = new Date()) {
+  if (!/^\d{8}$/.test(text)) throw new Error("--date must be yyyymmdd");
+  const date = new Date(`${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6)}T${now.toISOString().slice(11, 19)}Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10).replace(/-/g, "") !== text) throw new Error(`--date ${text} is not a real day`);
+  if (text > now.toISOString().slice(0, 10).replace(/-/g, "")) throw new Error(`--date ${text} is in the future; phones refuse a set dated ahead of their clock`);
+  return date;
 }
 
 /** Write a checked set into a folder, then read it back and check it again. */
@@ -92,10 +107,19 @@ export function writeSet(dir, set, { publicKey, keep }) {
 /** Where the app downloads newer lists from; DefsFormat.BASE_URL says the same (a test compares). */
 export const PUBLISHED_BASE = "https://miniwhale-git.github.io/toolkit-definitions/v1/";
 
+/** What fetchPublished returns when the published set is ours (the signature verifies) but written in an older format. */
+export class OlderFormat {
+  constructor(reason) {
+    this.reason = reason;
+  }
+}
+
 /**
  * Download the published set into dir and check it as the app would (hashes, signature).
- * Returns null when nothing is published yet (the manifest answers 404). Any other failure throws.
- * @param {{ base: string, dir: string, fetcher: ReturnType<typeof makeFetcher>, publicKey: import("node:crypto").KeyObject }} options
+ * Returns null when nothing is published yet (the manifest answers 404), and an OlderFormat when the
+ * manifest is signed by one of our keys but its host table has the 6-byte keys of the first format
+ * (the app refuses such a set, so it cannot be the floor for the next one). Any other failure throws.
+ * @param {{ base: string, dir: string, fetcher: ReturnType<typeof makeFetcher>, publicKey: import("node:crypto").KeyObject | import("node:crypto").KeyObject[] }} options
  */
 export async function fetchPublished({ base, dir, fetcher, publicKey }) {
   const url = (name) => new URL(name, base).href;
@@ -106,10 +130,22 @@ export async function fetchPublished({ base, dir, fetcher, publicKey }) {
     if (error.status === 404) return null;
     throw error;
   }
-  const manifest = parseManifest(manifestFile);
+  const signature = await fetcher.bytes(url(SIGNATURE), 1024);
+  let manifest;
+  try {
+    manifest = parseManifest(manifestFile);
+  } catch (error) {
+    const keys = Array.isArray(publicKey) ? publicKey : [publicKey];
+    if (signedByAny(manifestFile, signature.toString("utf8"), keys) < 0) throw error;
+    const hosts = await fetcher.bytes(url("hosts.tkl"), LIMITS.totalBytes);
+    if (hosts.length >= 16 && hosts.toString("latin1", 0, 4) === "TKL1" && hosts[4] === 6) {
+      return new OlderFormat(`hosts.tkl has 6-byte keys; this format needs 8 (${error.message})`);
+    }
+    throw error;
+  }
   mkdirSync(dir, { recursive: true });
   writeFileSync(path.join(dir, MANIFEST), manifestFile);
-  writeFileSync(path.join(dir, SIGNATURE), await fetcher.bytes(url(SIGNATURE), 1024));
+  writeFileSync(path.join(dir, SIGNATURE), signature);
   for (const file of manifest.files) {
     if (!/^[a-z0-9-]+\.tkl$/.test(file.name)) throw new Error(`the published manifest names "${file.name}"`);
     writeFileSync(path.join(dir, file.name), await fetcher.bytes(url(file.name), LIMITS.totalBytes));
@@ -175,6 +211,7 @@ export function parseCommandLine(argv) {
       previous: { type: "string" },
       date: { type: "string" },
       "allow-drop": { type: "boolean", default: false },
+      "allow-growth": { type: "boolean", default: false },
       "require-signature": { type: "boolean", default: false },
       check: { type: "boolean", default: false },
       base: { type: "string", default: PUBLISHED_BASE },
@@ -185,17 +222,13 @@ export function parseCommandLine(argv) {
 
 async function main(argv) {
   const { command, args, flags } = parseCommandLine(argv);
-  const publicKey = publicKeyFrom(PUBLIC_KEY);
+  const publicKey = productionKeys();
   const keep = loadKeepList();
 
   if (command === "build") {
     if (!flags.out) throw new Error("build needs --out DIR");
+    const now = flags.date ? buildDate(flags.date) : new Date();
     const previous = flags.previous ? loadVerifiedSet(flags.previous, publicKey) : null;
-    let now = new Date();
-    if (flags.date) {
-      if (!/^\d{8}$/.test(flags.date)) throw new Error("--date must be yyyymmdd");
-      now = new Date(`${flags.date.slice(0, 4)}-${flags.date.slice(4, 6)}-${flags.date.slice(6)}T${now.toISOString().slice(11, 19)}Z`);
-    }
     let seq = Number(flags.seq);
     if (flags.seq === "auto") {
       const sameDay = previous && Math.floor(previous.manifest.version / 100) === Math.floor(versionFor(now, 1) / 100);
@@ -208,7 +241,10 @@ async function main(argv) {
       console.log(`WARNING  ${why}; the set will be UNSIGNED and the app will refuse it`);
     }
     const fetchText = makeFetcher({ log: (s) => console.log(s) });
-    const { set, results } = await buildSet({ fetchText, keep, now, seq, previous, privateKey, publicKey, allowDrop: flags["allow-drop"], requireSignature: Boolean(privateKey) || flags["require-signature"] });
+    const { set, results } = await buildSet({
+      fetchText, keep, keepApps: loadKeepApps(), now, seq, previous, privateKey, publicKey,
+      allowDrop: flags["allow-drop"], allowGrowth: flags["allow-growth"], requireSignature: Boolean(privateKey) || flags["require-signature"],
+    });
     for (const warning of await freshnessWarnings(fetchText, now)) {
       console.log(`WARNING  ${warning}`);
       if (process.env.GITHUB_ACTIONS) console.log(`::warning::${warning}`);
@@ -235,6 +271,10 @@ async function main(argv) {
     if (manifest === null) {
       console.log(`nothing is published at ${flags.base} yet`);
       return 3;
+    }
+    if (manifest instanceof OlderFormat) {
+      console.log(`the published set is signed by us but in an older format the app refuses: ${manifest.reason}`);
+      return 4;
     }
     console.log(`downloaded the published set, version ${manifest.version}, and it verifies`);
     return 0;

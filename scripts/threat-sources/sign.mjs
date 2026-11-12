@@ -5,8 +5,16 @@
 import { createPrivateKey, createPublicKey, sign, verify } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-/** Same value as DefsFormat.PUBLIC_KEY: 32 raw bytes, base64. A test compares the two files. */
-export const PUBLIC_KEY = "kTIP0679KOLMbi09sug9uK9DCfoZNQAv99z1/enH91s=";
+/**
+ * Same values as DefsFormat.PUBLIC_KEYS: 32 raw bytes each, base64. A test compares the two files.
+ * The first signs every set today; the second is a backup whose private half is kept offline by the
+ * owner, so the first can be replaced if it ever leaks (see DefsFormat). A set is valid when ANY of
+ * these signs it.
+ */
+export const PUBLIC_KEYS = Object.freeze(["kTIP0679KOLMbi09sug9uK9DCfoZNQAv99z1/enH91s=", "AFb41ClemNe2AVb//8tbV9qLX3kx+WowNNv9uIFCVHY="]);
+
+/** The key the daily build signs with today. */
+export const PUBLIC_KEY = PUBLIC_KEYS[0];
 
 /** A public key object from the raw 32 bytes in base64. */
 export function publicKeyFrom(base64) {
@@ -51,3 +59,9 @@ export function signatureValid(bytes, signatureText, publicKey) {
   if (!/^[A-Za-z0-9+/]{86}==$/.test(text)) return false;
   return verify(null, bytes, publicKey, Buffer.from(text, "base64"));
 }
+
+/** Index of the first key in `publicKeys` the signature is valid for, or -1. */
+export const signedByAny = (bytes, signatureText, publicKeys) => publicKeys.findIndex((key) => signatureValid(bytes, signatureText, key));
+
+/** Every key of PUBLIC_KEYS as a key object. */
+export const publicKeys = () => PUBLIC_KEYS.map(publicKeyFrom);
