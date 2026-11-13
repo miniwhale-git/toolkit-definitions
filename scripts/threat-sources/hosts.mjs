@@ -165,8 +165,9 @@ export const SCAM_ENDINGS = new Set(parseWords(readFileSync(SCAM_ENDINGS_FILE, "
  * What the short-name rule says about a listed host: `rule` is why its length alone would drop it ("short": its
  * name before the suffix is SHORT_NAME characters or fewer; "one source": SHORT_NAME_ONE_SOURCE or fewer and only
  * one source lists it), and `exception` why it stays listed all the same, checked in this order:
- *   "brand"       the name starts or ends with a commonly imitated name and is longer than it ("dhl1.net",
- *                 "dhlpay.shop"); the bare name on another ending ("dhl.de") is most often the company's own site;
+ *   "brand"       the name is a commonly imitated name with digits or one service word before or after it
+ *                 ("dhl1.net", "dhlpay.shop"), as the app's BuiltNames reads them; the bare name on another ending
+ *                 ("dhl.de") and any other addition ("dpdhl.com", "groups.io") are most often real sites;
  *   "scam ending" it ends in an ending scam messages favour ("dhl2.help");
  *   "two sources" two or more sources list it.
  * Short bare domains are otherwise almost always shorteners or generic services; a bad page on one is a path,
@@ -180,10 +181,29 @@ export function shortNameCheck(host, sources, { names = IMITATED_NAMES, endings 
   const rule = name.length <= SHORT_NAME ? "short" : name.length <= SHORT_NAME_ONE_SOURCE && sources <= 1 ? "one source" : null;
   if (rule === null) return none;
   let exception = null;
-  if (names.some((b) => name.length > b.length && (name.startsWith(b) || name.endsWith(b)))) exception = "brand";
+  if (names.some((b) => builtOn(name, b))) exception = "brand";
   else if (endings.has(host.slice(host.lastIndexOf(".") + 1))) exception = "scam ending";
   else if (sources >= 2) exception = "two sources";
   return { rule, exception };
+}
+
+/**
+ * The app's service words (BuiltNames.ALARM_WORDS and PLAIN_WORDS, kept equal by a test): a short name built from
+ * a brand and one of these, or digits, stays listed.
+ */
+export const SERVICE_WORDS = new Set([
+  "kyc", "login", "signin", "verify", "verification", "secure", "update", "reward", "rewards", "support", "help",
+  "helpdesk", "refund", "netbanking", "cashback", "otp", "suspend", "claim", "alert", "unlock", "bonus",
+  "app", "apps", "pay", "bank", "india", "online", "post", "express", "track", "tracking", "care", "yono",
+  "official", "mobile",
+]);
+
+/** True when `name`, hyphens read through, is `brand` with digits or one service word right before or after it. */
+function builtOn(name, brand) {
+  const n = name.replaceAll("-", "");
+  if (n.length <= brand.length) return false;
+  const fits = (added) => /^[0-9]+$/.test(added) || SERVICE_WORDS.has(added);
+  return (n.startsWith(brand) && fits(n.slice(brand.length))) || (n.endsWith(brand) && fits(n.slice(0, -brand.length)));
 }
 
 /** Why a listed bare domain is dropped as too short to be one site, or null (see shortNameCheck). */

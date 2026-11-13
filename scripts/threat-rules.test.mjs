@@ -16,7 +16,7 @@ import { CANARY } from "./threat-sources/canary.mjs";
 import { FIXTURE_ENTRIES, fixtureSet } from "./threat-sources/fixture-set.mjs";
 import { buildHostTable } from "./threat-sources/host-table.mjs";
 import { checkSet, readSet } from "./threat-sources/gates.mjs";
-import { IMITATED_NAMES, SCAM_ENDINGS, loadKeepList, loadShorteners, parseKeepList, parseShorteners, parseWords, shortNameCheck, shortNameRule, withShorteners } from "./threat-sources/hosts.mjs";
+import { IMITATED_NAMES, SCAM_ENDINGS, SERVICE_WORDS, loadKeepList, loadShorteners, parseKeepList, parseShorteners, parseWords, shortNameCheck, shortNameRule, withShorteners } from "./threat-sources/hosts.mjs";
 import { loadKeepApps } from "./threat-sources/keep-apps.mjs";
 import { GENERIC_KIND_OF, KINDS, LABEL_KIND_OF, labelKind, nameUsedLabel, shownLabel, threatLabel } from "./threat-sources/labels.mjs";
 import { LABELS as MVT_LABELS, campaignLabel } from "./threat-sources/mvt.mjs";
@@ -153,8 +153,13 @@ describe("short bare domains", () => {
       eq(shortNameRule(host, 1), null, host);
       eq(shortNameCheck(host, 1).exception, "brand", host);
     }
-    eq(shortNameCheck("xsbi.in", 1), { rule: "short", exception: "brand" }, "a name that ends with one");
-    eq(shortNameCheck("upsx.de", 1), { rule: "short", exception: "brand" });
+    eq(shortNameCheck("sbi1.in", 1), { rule: "short", exception: "brand" }, "digits before or after");
+    eq(shortNameCheck("upspay.de", 1), { rule: "one source", exception: "brand" }, "a service word");
+    // Any other addition is not built the scam way: DHL Group's own site, and ordinary names (review, finding 7).
+    for (const host of ["xsbi.in", "upsx.de", "dpdhl.com", "groups.io", "cups.org"]) eq(shortNameCheck(host, 1).exception, null, host);
+    // Hyphens are read through, and the end is tried when the start does not fit (second review, finding 9).
+    eq(shortNameCheck("sbi-1.in", 1).exception, "brand");
+    eq(shortNameCheck("appdhl.com", 1).exception, "brand");
     eq(shortNameCheck("qr9.top", 1), { rule: "short", exception: "scam ending" });
     eq(shortNameCheck("abcdef.help", 1), { rule: "one source", exception: "scam ending" });
     eq(shortNameCheck("qr9.de", 2), { rule: "short", exception: "two sources" });
@@ -178,6 +183,14 @@ describe("short bare domains", () => {
     ok(imitated.length >= 50 && endings.length >= 30, `read ${imitated.length} names and ${endings.length} endings`);
     eq([...IMITATED_NAMES].sort(), imitated, "run the export again: scripts/threat-sources/imitated-names.txt differs from KnownHosts.COMMONLY_IMITATED");
     eq([...SCAM_ENDINGS].sort(), endings, "scripts/threat-sources/scam-endings.txt differs from KnownHosts.SCAM_FAVOURED_ENDINGS");
+    const built = readFileSync(path.join(APP, "security", "links", "BuiltNames.kt"), "utf8");
+    const words = ["ALARM_WORDS", "PLAIN_WORDS"].flatMap((name) => {
+      const block = new RegExp(`val ${name}[^=]*=\\s*setOf\\(([\\s\\S]*?)\\)`).exec(built);
+      ok(block, `BuiltNames.kt has no ${name} = setOf(...)`);
+      return [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    });
+    ok(words.length >= 30, `read ${words.length} service words`);
+    eq([...SERVICE_WORDS].sort(), words.sort(), "hosts.mjs SERVICE_WORDS differs from BuiltNames.ALARM_WORDS + PLAIN_WORDS");
     assert.throws(() => parseWords("dhl\ndhl\n", "x"), /twice/);
     assert.throws(() => parseWords("DHL\n", "x"), /lower-case/);
   });
